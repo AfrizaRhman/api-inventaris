@@ -1,0 +1,206 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                     String  @id @default(uuid()) @db.Uuid()
+  username               String  @unique @db.VarChar(50)
+  email                  String  @unique @db.VarChar(70)
+  phone                  String? @db.VarChar(20)
+  password               String
+  role                   String /// super_admin, perhutani, admin
+  status                 String? @default("active") @db.VarChar(10)
+  password_reset_token   String?
+  password_reset_expires Int?
+  created_at             Int     @default(dbgenerated("EXTRACT(EPOCH FROM now())"))
+  updated_at             Int     @default(dbgenerated("EXTRACT(EPOCH FROM now())"))
+  deleted_at             Int?
+  created_by             String? @db.Uuid()
+  updated_by             String? @db.Uuid()
+  deleted_by             String? @db.Uuid()
+
+  // User fields
+  first_name String
+  last_name  String?
+  odtw_id    String? @db.Uuid()
+  odtw       Odtw?   @relation(fields: [odtw_id], references: [id])
+
+  @@index([username])
+  @@index([email])
+  @@index([phone])
+  @@map("users")
+}
+
+model Warehouse {
+  id String @id @default(uuid()) @db.Uuid()
+
+  name    String
+  address String
+  status  String @default("active")
+
+  created_at Int     @default(dbgenerated("EXTRACT(EPOCH FROM now())::integer"))
+  updated_at Int     @default(dbgenerated("EXTRACT(EPOCH FROM now())::integer"))
+  deleted_at Int?
+  created_by String? @db.Uuid()
+  updated_by String? @db.Uuid()
+  deleted_by String? @db.Uuid()
+
+  //relation
+  skus Sku[]
+
+  @@index([name])
+  @@map("warehouses")
+}
+
+model Unit {
+  id String @id @default(uuid()) @db.Uuid()
+
+  name   String
+  status String @default("active")
+
+  created_at Int     @default(dbgenerated("EXTRACT(EPOCH FROM now())::integer"))
+  updated_at Int     @default(dbgenerated("EXTRACT(EPOCH FROM now())::integer"))
+  deleted_at Int?
+  created_by String? @db.Uuid()
+  updated_by String? @db.Uuid()
+  deleted_by String? @db.Uuid()
+
+  //relation
+  items Item[]
+
+  @@index([name])
+  @@map("units")
+}
+
+model Category {
+  id String @id @default(uuid()) @db.Uuid()
+
+  name   String
+  status String @default("active")
+
+  created_at Int     @default(dbgenerated("EXTRACT(EPOCH FROM now())::integer"))
+  updated_at Int     @default(dbgenerated("EXTRACT(EPOCH FROM now())::integer"))
+  deleted_at Int?
+  created_by String? @db.Uuid()
+  updated_by String? @db.Uuid()
+  deleted_by String? @db.Uuid()
+
+  //relation
+  items Item[]
+
+  @@index([name])
+  @@map("categories")
+}
+
+model Item {
+  id String @id @default(uuid()) @db.Uuid()
+
+  unit_id     String  @db.Uuid()
+  category_id String  @db.Uuid()
+  name        String
+  code        String
+  suplier     String
+  price       Float   @db.Real()
+  image       String?
+  description String?
+
+  created_at Int     @default(dbgenerated("EXTRACT(EPOCH FROM now())::integer"))
+  updated_at Int     @default(dbgenerated("EXTRACT(EPOCH FROM now())::integer"))
+  deleted_at Int?
+  created_by String? @db.Uuid()
+  updated_by String? @db.Uuid()
+  deleted_by String? @db.Uuid()
+
+  //relation
+  unit     Unit     @relation(fields: [unit_id], references: [id])
+  category Category @relation(fields: [category_id], references: [id])
+  skus Sku[]
+
+  @@index([unit_id])
+  @@index([category_id])
+  @@index([name])
+  @@map("items")
+}
+
+model Sku {
+  id String @id @default(uuid()) @db.Uuid()
+
+  item_id String @db.Uuid()
+  warehouse_id String @db.Uuid()
+  code String
+  status String @default("available")
+
+  created_at Int     @default(dbgenerated("EXTRACT(EPOCH FROM now())::integer"))
+  updated_at Int     @default(dbgenerated("EXTRACT(EPOCH FROM now())::integer"))
+  deleted_at Int?
+  created_by String? @db.Uuid()
+  updated_by String? @db.Uuid()
+  deleted_by String? @db.Uuid()
+
+  // relation
+  item    Item   @relation(fields: [item_id], references: [id])
+  warehouse Warehouse @relation(fields: [warehouse_id], references: [id])
+
+  @@index([item_id])
+  @@map("skus")
+}
+
+// ==============================================================================================
+model Odtw {
+  id             String  @id @default(uuid()) @db.Uuid()
+  odtw_code      String  @unique @db.VarChar(3)
+  name           String
+  ticket_price   Int?
+  address        String?
+  village        String?
+  district       String?
+  city           String?
+  province       String?
+  email          String? @unique
+  phone          String? @unique
+  latitude       String?
+  longitude      String?
+  status         String  @default("active")
+  webhook_url    String? @db.Text()
+  max_device     Int?    @default(1)
+  bank_name      String?
+  account_name   String?
+  account_number String?
+  created_at     Int     @default(dbgenerated("EXTRACT(EPOCH FROM now())::integer"))
+  updated_at     Int     @default(dbgenerated("EXTRACT(EPOCH FROM now())::integer"))
+  deleted_at     Int?
+  created_by     String? @db.Uuid()
+  updated_by     String? @db.Uuid()
+  deleted_by     String? @db.Uuid()
+
+  users      User[]
+  knowledges Knowledge[]
+
+  @@map("odtws")
+}
+
+model Knowledge {
+  id         String  @id @default(uuid()) @db.Uuid()
+  odtw_id    String  @db.Uuid()
+  topic_code String  @unique @db.VarChar(6)
+  topic      String
+  content    String
+  status     String
+  created_at Int     @default(dbgenerated("EXTRACT(EPOCH FROM now())::integer"))
+  updated_at Int     @default(dbgenerated("EXTRACT(EPOCH FROM now())::integer"))
+  deleted_at Int?
+  created_by String? @db.Uuid()
+  updated_by String? @db.Uuid()
+  deleted_by String? @db.Uuid()
+
+  //relation
+  odtw Odtw @relation(fields: [odtw_id], references: [id])
+
+  @@index([odtw_id])
+  @@map("knowledges")
+}

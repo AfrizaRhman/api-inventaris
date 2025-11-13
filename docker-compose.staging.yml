@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  app-staging:
+    container_name: ${CONTAINER_NAME}
+    build:
+      context: .
+      target: production
+    ports:
+      - "${HOST_PORT}:3333"
+    environment:
+      - NODE_ENV=staging
+      - PORT=3333
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      # Contabo Object Storage Configuration (S3-compatible)
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      - AWS_S3_ENDPOINT=${AWS_S3_ENDPOINT}
+      - AWS_S3_FORCE_PATH_STYLE=${AWS_S3_FORCE_PATH_STYLE}
+      # Contabo public URL identifier (found in Contabo member panel)
+      - CONTABO_PUBLIC_URL_ID=${CONTABO_PUBLIC_URL_ID}
+      - KNOWLEDGE_WEBHOOK_URL=${KNOWLEDGE_WEBHOOK_URL}
+      - SEND_QR_WEBHOOK_URL=${SEND_QR_WEBHOOK_URL}
+    env_file:
+      - .env.staging
+    # Remove depends_on since the database service is no longer in this compose file
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3333/healthz', (r) => { if (r.statusCode !== 200) throw new Error('Health check failed') }).on('error', (e) => { console.error(e.message); process.exit(1); })"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 5s
+
+  # Remove the database service since the database is installed on the server, not in Docker
+
+volumes:
+  postgres_data_staging:

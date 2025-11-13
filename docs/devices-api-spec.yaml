@@ -1,0 +1,385 @@
+openapi: 3.0.0
+info:
+  title: Devices API
+  description: API for managing devices in the NAMS system
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local server
+  - url: https://api.nams.example.com
+    description: Production server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Device:
+      type: object
+      required:
+        - id
+        - odtw_id
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the device
+        odtw_id:
+          type: string
+          format: uuid
+          description: Reference to the ODTW location
+        token:
+          type: string
+          description: Authentication token for the device
+        device_id:
+          type: string
+          description: Unique identifier for the physical device
+        device_name:
+          type: string
+          description: Human-readable name for the device
+        webhook_url:
+          type: string
+          format: uri
+          description: URL where the device sends webhook notifications
+        logged_in:
+          type: boolean
+          description: Whether the device is currently logged in
+        connected:
+          type: boolean
+          description: Whether the device is currently connected
+        jid:
+          type: string
+          description: Jabber ID for the device
+        meta_data:
+          type: object
+          description: Additional metadata about the device
+        created_at:
+          type: integer
+          format: int64
+          description: Unix timestamp of creation
+        updated_at:
+          type: integer
+          format: int64
+          description: Unix timestamp of last update
+        deleted_at:
+          type: integer
+          format: int64
+          description: Unix timestamp of soft deletion
+        created_by:
+          type: string
+          format: uuid
+          description: User who created the device
+        updated_by:
+          type: string
+          format: uuid
+          description: User who last updated the device
+        deleted_by:
+          type: string
+          format: uuid
+          description: User who soft-deleted the device
+    CreateDeviceRequest:
+      type: object
+      required:
+        - odtw_id
+      properties:
+        odtw_id:
+          type: string
+          format: uuid
+        token:
+          type: string
+        device_id:
+          type: string
+        device_name:
+          type: string
+        webhook_url:
+          type: string
+          format: uri
+        logged_in:
+          type: boolean
+        connected:
+          type: boolean
+        jid:
+          type: string
+        meta_data:
+          type: object
+    UpdateDeviceRequest:
+      type: object
+      properties:
+        token:
+          type: string
+        device_id:
+          type: string
+        device_name:
+          type: string
+        webhook_url:
+          type: string
+          format: uri
+        logged_in:
+          type: boolean
+        connected:
+          type: boolean
+        jid:
+          type: string
+        meta_data:
+          type: object
+        updated_by:
+          type: string
+          format: uuid
+    PaginationRequest:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          default: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 10
+        search:
+          type: string
+        filters:
+          type: object
+          properties:
+            odtw_id:
+              type: string
+              format: uuid
+            status:
+              type: string
+        sort:
+          type: object
+          properties:
+            field:
+              type: string
+              enum: [created_at, updated_at]
+              default: created_at
+            direction:
+              type: string
+              enum: [asc, desc]
+              default: desc
+    PaginationResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Device'
+        meta:
+          type: object
+          properties:
+            total:
+              type: integer
+              format: int64
+            page:
+              type: integer
+              format: int32
+            limit:
+              type: integer
+              format: int32
+            totalPages:
+              type: integer
+              format: int32
+  parameters:
+    deviceId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The ID of the device
+paths:
+  /devices:
+    post:
+      summary: Create a new device
+      operationId: createDevice
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDeviceRequest'
+      responses:
+        '201':
+          description: Device created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  error:
+                    type: string
+                  statusCode:
+                    type: integer
+        '409':
+          description: Conflict - device with this device_id already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  error:
+                    type: string
+                  statusCode:
+                    type: integer
+    get:
+      summary: List all devices with pagination
+      operationId: listDevices
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaginationRequest'
+      responses:
+        '200':
+          description: Successful response with paginated devices
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginationResponse'
+        '400':
+          description: Bad request - invalid pagination parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  error:
+                    type: string
+                  statusCode:
+                    type: integer
+  /devices/{id}:
+    get:
+      summary: Get a device by ID
+      operationId: getDeviceById
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/deviceId'
+      responses:
+        '200':
+          description: Successful response with device details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  error:
+                    type: string
+                  statusCode:
+                    type: integer
+    patch:
+      summary: Update a device
+      operationId: updateDevice
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/deviceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDeviceRequest'
+      responses:
+        '200':
+          description: Device updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  error:
+                    type: string
+                  statusCode:
+                    type: integer
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  error:
+                    type: string
+                  statusCode:
+                    type: integer
+        '409':
+          description: Conflict - device ID already taken
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  error:
+                    type: string
+                  statusCode:
+                    type: integer
+    delete:
+      summary: Soft delete a device
+      operationId: deleteDevice
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/deviceId'
+      responses:
+        '200':
+          description: Device soft deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  error:
+                    type: string
+                  statusCode:
+                    type: integer
