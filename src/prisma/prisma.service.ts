@@ -39,7 +39,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
           Unit: true,
           Category: true,
           Item: true,
-          Sku: true,
+          SKU: true,
         },
         defaultConfig: {
           field: 'deleted_at',
