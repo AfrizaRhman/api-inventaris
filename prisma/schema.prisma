@@ -130,14 +130,14 @@ model Item {
 // SKU
 // ----------------------
 model SKU {
-  id           String @id @default(uuid())
-  item_id      String
-  code         String
-  name         String
-  warehouse_id String
+  id        String @id @default(uuid())
+  item_id   String
+  code      String
+  name      String
+  warehouse_id String?
 
-  item      Item      @relation(fields: [item_id], references: [id])
-  warehouse Warehouse @relation(fields: [warehouse_id], references: [id])
+  item       Item @relation(fields: [item_id], references: [id])
+  warehouse  Warehouse? @relation(fields: [warehouse_id], references: [id])
 
   movementDetail ItemMovementDetail[]
   loanDetails    LoanDetail[]

@@ -9,11 +9,12 @@ import { UserModule } from './users/user.module';
 import { OdtwModule } from './odtw/odtw.module';
 import { KnowledgeModule } from './knowledge/knowledge.module';
 import { VisitorModule } from './visitor/visitor.module';
+import { ItemsModule } from './items/items.module';
+
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-
       isGlobal: true,
     }),
     PrismaModule,
@@ -23,9 +24,9 @@ import { VisitorModule } from './visitor/visitor.module';
     OdtwModule,
     KnowledgeModule,
     VisitorModule,
+    ItemsModule,   // <--- WAJIB ADA
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-
 export class AppModule {}
