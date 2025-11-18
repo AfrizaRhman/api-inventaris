@@ -10,6 +10,7 @@ import { OdtwModule } from './odtw/odtw.module';
 import { KnowledgeModule } from './knowledge/knowledge.module';
 import { VisitorModule } from './visitor/visitor.module';
 import { ItemsModule } from './items/items.module';
+import { LoansModule } from './loans/loans.module';
 
 
 @Module({
@@ -25,6 +26,7 @@ import { ItemsModule } from './items/items.module';
     KnowledgeModule,
     VisitorModule,
     ItemsModule,   // <--- WAJIB ADA
+    LoansModule,
   ],
   controllers: [AppController],
   providers: [AppService],

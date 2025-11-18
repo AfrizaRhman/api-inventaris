@@ -180,32 +180,33 @@ model ItemMovementDetail {
 // ----------------------
 // LOAN
 // ----------------------
-model Loan {
-  id           String    @id @default(uuid())
-  name         String
+  model loans {
+  id          Int           @id @default(autoincrement())
+  name        String
   phone_number String?
-  email        String?
-  necessity    String?
-  note         String?
-  loan_date    DateTime?
+  email       String?
+  necessity   String?
+  note        String?
+  loan_date   DateTime?
+  created_by  String?
+  updated_by  String?
+  loan_details loan_details[]
 
-  user_id String?
-  user    User?   @relation(fields: [user_id], references: [id])
-
-  details LoanDetail[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 // ----------------------
 // LOAN DETAIL
 // ----------------------
-model LoanDetail {
-  id          String    @id @default(uuid())
-  loan_id     String
-  sku_id      String
+model loan_details {
+  id          Int      @id @default(autoincrement())
+  loan_id     Int
+  sku_id      String   // FIX: SKU.id is String, not Int
   qty         Int
   return_date DateTime?
-  status      String?
+  status      String?  @default("borrowed")
 
-  loan Loan @relation(fields: [loan_id], references: [id])
-  sku  SKU  @relation(fields: [sku_id], references: [id])
+  loan loans @relation(fields: [loan_id], references: [id])
+  sku  SKU   @relation(fields: [sku_id], references: [id])   // FIX: use SKU model
 }
