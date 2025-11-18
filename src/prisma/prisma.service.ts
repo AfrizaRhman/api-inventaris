@@ -31,6 +31,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     sku: any;
     sku: any;
     sku: any;
+    loans: any;
 
   constructor() {
     this.baseClient = new PrismaClient();
