@@ -6,32 +6,16 @@ import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { createSoftDeleteExtension } from 'prisma-extension-soft-delete';
 
-/**
- * PrismaService with soft delete functionality using prisma-extension-soft-delete
- *
- * This service extends the Prisma client with soft delete capabilities:
- * - Automatically handles soft delete for User model using 'deleted_at' field
- * - Uses epoch timestamps (integer) for Laravel-style soft delete
- * - Provides methods for soft delete, restore, and querying
- *
- * Extension Features:
- * - findMany/findUnique automatically exclude soft deleted records
- * - softDelete() sets deleted_at timestamp without actually deleting
- * - restore() clears deleted_at field to restore records
- * - findManyWithDeleted() includes soft deleted records
- * - findManyDeleted() returns only soft deleted records
- */
-
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
   private readonly baseClient: PrismaClient;
   private readonly extendedClient: any;
-    sku: any;
-    sku: any;
-    sku: any;
-    sku: any;
-    sku: any;
-    loans: any;
+
+  // Semua custom accessor cukup ditulis sekali
+  items: any;
+  sku: any;
+  loans: any;
+  itemsMovement: any;
 
   constructor() {
     this.baseClient = new PrismaClient();
@@ -46,11 +30,13 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
           Category: true,
           Item: true,
           SKU: true,
+          Loan: true,
+          ItemMovement: true,
         },
         defaultConfig: {
           field: 'deleted_at',
           createValue: (deleted) => {
-            if (deleted) return Math.floor(Date.now() / 1000); // Epoch timestamp
+            if (deleted) return Math.floor(Date.now() / 1000);
             return null;
           },
         },
