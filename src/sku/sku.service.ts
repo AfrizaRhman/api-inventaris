@@ -1,61 +1,36 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateSkuDto } from './dto/create-sku.dto';
-import { UpdateSkuDto } from './dto/update-sku.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class SkuService {
   constructor(private prisma: PrismaService) {}
 
-  create(data: CreateSkuDto, userId?: string) {
+  create(data) {
     return this.prisma.sku.create({
-      data: {
-        ...data,
-        created_by: userId || null,
-      },
+      data,
     });
   }
 
   findAll() {
-    return this.prisma.sku.findMany({
-      where: {
-        deleted_at: null,
-      },
-      include: {
-        item: true,
-        warehouse: true,
-      },
-    });
+    return this.prisma.sku.findMany();
   }
 
-  findOne(id: string) {
+  findOne(id: number) {
     return this.prisma.sku.findUnique({
       where: { id },
-      include: {
-        item: true,
-        warehouse: true,
-      },
     });
   }
 
-  update(id: string, data: UpdateSkuDto, userId?: string) {
+  update(id: number, data) {
     return this.prisma.sku.update({
       where: { id },
-      data: {
-        ...data,
-        updated_by: userId || null,
-        updated_at: Math.floor(Date.now() / 1000),
-      },
+      data,
     });
   }
 
-  remove(id: string, userId?: string) {
-    return this.prisma.sku.update({
+  remove(id: number) {
+    return this.prisma.sku.delete({
       where: { id },
-      data: {
-        deleted_at: Math.floor(Date.now() / 1000),
-        deleted_by: userId || null,
-      },
     });
   }
 }

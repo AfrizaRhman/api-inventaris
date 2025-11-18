@@ -1,57 +1,32 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Injectable } from '@nestjs/common';
-import { CreateSkuDto } from './dto/create-sku.dto';
-import { UpdateSkuDto } from './dto/update-sku.dto';
+import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
+import { SkuService } from './sku.service';
 
-@Injectable()
-class SkuService {
-  create(dto: CreateSkuDto) {
-    // simple stub implementation until a proper service is created
-    return dto;
-  }
-
-  findAll() {
-    return [];
-  }
-
-  findOne(id: string) {
-    return { id };
-  }
-
-  update(id: string, dto: UpdateSkuDto) {
-    return { id, ...dto };
-  }
-
-  remove(id: string) {
-    return { deleted: true, id };
-  }
-}
-
-@Controller('skus')
+@Controller('sku')
 export class SkuController {
-  constructor(private readonly service: SkuService) {}
+  constructor(private readonly skuService: SkuService) {}
 
   @Post()
-  create(@Body() dto: CreateSkuDto) {
-    return this.service.create(dto);
+  create(@Body() data) {
+    return this.skuService.create(data);
   }
 
   @Get()
   findAll() {
-    return this.service.findAll();
+    return this.skuService.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.service.findOne(id);
+    return this.skuService.findOne(Number(id));
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateSkuDto) {
-    return this.service.update(id, dto);
+  update(@Param('id') id: string, @Body() data) {
+    return this.skuService.update(Number(id), data);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.service.remove(id);
+    return this.skuService.remove(Number(id));
   }
 }
