@@ -26,6 +26,11 @@ import { createSoftDeleteExtension } from 'prisma-extension-soft-delete';
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
   private readonly baseClient: PrismaClient;
   private readonly extendedClient: any;
+    sku: any;
+    sku: any;
+    sku: any;
+    sku: any;
+    sku: any;
 
   constructor() {
     this.baseClient = new PrismaClient();

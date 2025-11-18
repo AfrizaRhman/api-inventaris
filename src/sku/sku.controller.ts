@@ -1,7 +1,30 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { SkuService } from './sku.service';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Injectable } from '@nestjs/common';
 import { CreateSkuDto } from './dto/create-sku.dto';
 import { UpdateSkuDto } from './dto/update-sku.dto';
+
+@Injectable()
+class SkuService {
+  create(dto: CreateSkuDto) {
+    // simple stub implementation until a proper service is created
+    return dto;
+  }
+
+  findAll() {
+    return [];
+  }
+
+  findOne(id: string) {
+    return { id };
+  }
+
+  update(id: string, dto: UpdateSkuDto) {
+    return { id, ...dto };
+  }
+
+  remove(id: string) {
+    return { deleted: true, id };
+  }
+}
 
 @Controller('skus')
 export class SkuController {
