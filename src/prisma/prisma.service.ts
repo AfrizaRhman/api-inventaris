@@ -8,6 +8,8 @@ import { createSoftDeleteExtension } from 'prisma-extension-soft-delete';
 
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
+    warehouse: any;
+    [x: string]: any;
   private readonly baseClient: PrismaClient;
   private readonly extendedClient: any;
 
