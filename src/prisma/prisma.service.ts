@@ -40,6 +40,10 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
+  get db() {
+  return this.extendedClient;
+  }
+
   get warehouse() {
     return this.extendedClient.warehouse;
   }
