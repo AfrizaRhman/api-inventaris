@@ -12,6 +12,7 @@ import { VisitorModule } from './visitor/visitor.module';
 import { ItemsModule } from './items/items.module';
 import { SkuModule } from './sku/sku.module';
 import { WarehouseModule } from './warehouse/warehouse.module';
+import {UnitModule} from './unit/unit.module';
 
 
 @Module({
@@ -29,6 +30,8 @@ import { WarehouseModule } from './warehouse/warehouse.module';
     ItemsModule, 
     SkuModule,
     WarehouseModule, // <--- WAJIB ADA
+    UnitModule,
+
   ],
   controllers: [AppController],
   providers: [AppService],
