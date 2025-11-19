@@ -14,10 +14,10 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   private readonly extendedClient: any;
 
   // Semua custom accessor cukup ditulis sekali
-  items: any;
+  item: any;
   sku: any;
   loans: any;
-  itemsMovement: any;
+  itemMovement: any;
 
   constructor() {
     this.baseClient = new PrismaClient();
@@ -29,12 +29,14 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
           Odtw: true,
           Warehouse: true,
           Unit: true,
-          Category: true,
+          Categories: true,
           Item: true,
-          SKU: true,
+          Sku: true,
           Loan: true,
-          ItemMovement: true,
-        },
+          LoanDetail: true,
+          Item_Movement: true,
+          ItemMovementDetail: true,
+        },        
         defaultConfig: {
           field: 'deleted_at',
           createValue: (deleted) => {
