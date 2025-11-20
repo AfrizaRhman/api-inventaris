@@ -14,7 +14,6 @@ import {
   PaginationDto,
 } from '../common/dto/pagination.dto';
 import { CreateUnitDto } from './dto/create-unit.dto';
-// import { UpdateUnitDto } from './dto/update-unit.dto';
 
 @Injectable()
 export class UnitService extends BaseService<any> {
@@ -22,12 +21,10 @@ export class UnitService extends BaseService<any> {
     super(prismaService);
   }
 
-  // MODEL YANG DIPAKAI
   protected getModel() {
     return this.prismaService.db.unit;
   }
 
-  // QUERY OPTIONS UNTUK PAGINATION & FILTER
   protected getQueryOptions(): QueryBuilderOptions {
     return {
       defaultSortField: 'createdAt',
@@ -39,14 +36,12 @@ export class UnitService extends BaseService<any> {
     };
   }
 
-  // CREATE
   async createUnit(dto: CreateUnitDto) {
     return this.create({
       name: dto.name,
     });
   }
 
-  // PAGINATION (READ ALL)
   async findAllUnitsPaginated(paginationDto: PaginationDto, where = {}) {
     return this.findAllPaginated(
       paginationDto,
@@ -54,25 +49,16 @@ export class UnitService extends BaseService<any> {
     );
   }
 
-  // FIND ONE
   async findUnitById(id: string) {
     const unit = await this.findById(id);
 
-    if (!unit) throw new NotFoundException(`Unit with ID ${id} not found`);
+    if (!unit) {
+      throw new NotFoundException(`Unit with ID ${id} not found`);
+    }
 
     return unit;
   }
 
-  // UPDATE
-  // async updateUnit(id: string, dto: UpdateUnitDto) {
-  //   await this.findUnitById(id); // memastikan unit ada
-
-  //   return this.update(id, {
-  //     name: dto.name ?? undefined,
-  //   });
-  // }
-
-  // SOFT DELETE
   async softDeleteUnit(id: string) {
     await this.findUnitById(id);
 
@@ -81,7 +67,6 @@ export class UnitService extends BaseService<any> {
     });
   }
 
-  // HARD DELETE
   async deleteUnitPermanently(id: string) {
     return this.permanentDelete(id);
   }

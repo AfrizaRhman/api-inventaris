@@ -10,7 +10,7 @@ import {
   ValidationPipe,
   UsePipes,
 } from '@nestjs/common';
-import { UnitService } from './unit.service';
+import { UnitService } from './units.service';
 import { CreateUnitDto } from './dto/create-unit.dto';
 import { UpdateUnitDto } from './dto/update-unit.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
@@ -31,17 +31,17 @@ export class UnitController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.unitService.findUnitById(id);
-  }
+findOne(@Param('id') id: string) {
+  return this.unitService.findUnitById(id);
+}
 
-  @Put(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateUnitDto) {
-    return this.unitService.update(id, dto);
-  }
+@Put(':id')
+update(@Param('id') id: string, @Body() dto: UpdateUnitDto) {
+  return this.unitService.update(id, dto);
+}
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.unitService.softDeleteUnit(id);
-  }
+@Delete(':id')
+remove(@Param('id') id: string) {
+  return this.unitService.softDeleteUnit(id);
+}
 }
