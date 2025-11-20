@@ -106,9 +106,12 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+<<<<<<< HEAD
   },
 
   "prisma" : {
     "seed": "ts-node prisma/seeds/auth.seed.ts"
+=======
+>>>>>>> origin/category
   }
 }
