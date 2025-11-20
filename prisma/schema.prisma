@@ -28,6 +28,7 @@ model Warehouse {
   address    String?
   status     String?
   created_by String?
+  
   updated_by String?
 
   deleted_at Int?

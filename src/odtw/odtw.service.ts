@@ -75,21 +75,6 @@ export class OdtwService extends BaseService<Odtw> {
   }
 
   async createOdtw(data: CreateOdtwDto) {
-    // Check for existing ODTW with the same email or name
-    const existing = await (this.prismaService.db as any).odtw.findFirst({
-      where: {
-        OR: [{ email: data.email }, { name: data.name }],
-      },
-    });
-    if (existing) {
-      throw new ConflictException('Email or name already exists');
-    }
-
-    // Generate ODTW code if not provided
-    if (!data.odtw_code) {
-      data.odtw_code = Math.random().toString(36).substring(2, 5).toUpperCase();
-    }
-
     return this.create(data);
   }
 
