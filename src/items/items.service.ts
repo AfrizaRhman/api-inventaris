@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-
 import {
   Injectable,
   BadRequestException,
@@ -33,7 +29,7 @@ export class ItemsService extends BaseService<any> {
       defaultSortDirection: SortDirection.DESC,
       allowedSortFields: ['id', 'name', 'price', 'stock', 'createdAt', 'updatedAt'],
       allowedFilterFields: ['id', 'name', 'price', 'stock', 'category_id', 'unit_id'],
-      defaultSearchFields: ['name', 'suplier', 'code'],
+      defaultSearchFields: ['name', 'supplier', 'code'],
       softDeleteField: 'deleted_at',
     };
   }
@@ -41,15 +37,9 @@ export class ItemsService extends BaseService<any> {
   private readonly itemInclude = {
     unit: true,
     category: true,
-    sku: {
-      include: {
-        loanDetail: true,
-        itemMovementDetail: true,
-      },
-    },
   };
 
-  private async ensureExists(model: 'unit' | 'category', id?: string) {
+  private async ensureExists(model: 'unit' | 'categories', id?: string) {
     if (!id) return;
 
     const record = await (this.prismaService.db as any)[model].findUnique({
@@ -64,12 +54,12 @@ export class ItemsService extends BaseService<any> {
   // CREATE
   async createItem(dto: CreateItemDto) {
     await this.ensureExists('unit', dto.unit_id);
-    await this.ensureExists('category', dto.category_id);
+    await this.ensureExists('categories', dto.category_id);
 
     return this.create(
       {
         name: dto.name,
-        // suplier: dto.suplier ?? null,
+        supplier: dto.supplier ?? null,
         price: dto.price ?? null,
         stock: dto.stock,
         description: dto.description ?? null,
@@ -77,9 +67,10 @@ export class ItemsService extends BaseService<any> {
         image: dto.image ?? null,
         unit_id: dto.unit_id,
         category_id: dto.category_id,
+        created_at: new Date(),   // ✅ tambahkan ini
       },
-      this.itemInclude,
-    );
+      this.itemInclude
+    );    
   }
 
   // PAGINATION
@@ -87,7 +78,7 @@ export class ItemsService extends BaseService<any> {
     return this.findAllPaginated(
       paginationDto,
       { ...where, deleted_at: null },
-      this.itemInclude,
+      this.itemInclude
     );
   }
 
@@ -105,13 +96,13 @@ export class ItemsService extends BaseService<any> {
     await this.findItemById(id);
 
     if (dto.unit_id) await this.ensureExists('unit', dto.unit_id);
-    if (dto.category_id) await this.ensureExists('category', dto.category_id);
+    if (dto.category_id) await this.ensureExists('categories', dto.category_id);
 
     return this.update(
       id,
       {
         name: dto.name ?? undefined,
-        // suplier: dto.suplier ?? undefined,
+        supplier: dto.supplier ?? undefined,
         price: dto.price ?? undefined,
         stock: dto.stock ?? undefined,
         description: dto.description ?? undefined,
@@ -120,7 +111,7 @@ export class ItemsService extends BaseService<any> {
         unit_id: dto.unit_id ?? undefined,
         category_id: dto.category_id ?? undefined,
       },
-      this.itemInclude,
+      this.itemInclude
     );
   }
 
