@@ -74,6 +74,10 @@ model Sku {
   status      String?
   warehouse_id String?
 
+   created_at    Int?         // optional, if you want timestamps
+   updated_at    Int?
+   deleted_at    Int?
+
   // relations
   item      Item     @relation(fields: [item_id], references: [id])
   warehouse Warehouse? @relation(fields: [warehouse_id], references: [id])
