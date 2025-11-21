@@ -51,9 +51,11 @@ export class WarehouseService extends BaseService<Warehouse> {
     return this.findAllPaginated(paginationDto, { deleted_at: null }, select);
   }
 
-  // BY ID
+  // DETAIL
   async findWarehouseById(id: string) {
-    const warehouse = await this.getModel().findUnique({ where: { id } });
+    const warehouse = await this.getModel().findFirst({
+      where: { id, deleted_at: null },
+    });
 
     if (!warehouse) throw new NotFoundException('Warehouse not found');
 
@@ -63,6 +65,7 @@ export class WarehouseService extends BaseService<Warehouse> {
   // UPDATE
   async updateWarehouse(id: string, data: UpdateWarehouseDto) {
     await this.findWarehouseById(id);
+
     return this.update(id, data);
   }
 
@@ -72,7 +75,7 @@ export class WarehouseService extends BaseService<Warehouse> {
 
     return this.update(id, {
       deleted_at: Math.floor(Date.now() / 1000),
-      update_by:   deleted_by,
+      updated_by: deleted_by,
     });
   }
 
