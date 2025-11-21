@@ -12,12 +12,22 @@ model Unit {
   name  String
 
   item Item[]
+  deleted_at DateTime?
 }
 
 model Categories {
-  id    String  @id @default(uuid())
-  name  String
-  code  String?
+  id         String   @id @default(uuid())
+  name       String
+  code       String?
+  status     String   @default("active")
+
+  created_by String?
+  updated_by String?
+  deleted_by String?
+  
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  deleted_at DateTime?
 
   item Item[]
 }
@@ -42,11 +52,15 @@ model Item {
    category_id String
    name        String
    image       String?
-   suplier     String?
+   supplier     String?
    price       Int?
    stock       Int
    description String?
    code        String?
+
+   created_at  DateTime @default(now())
+   updated_at  DateTime @updatedAt
+   deleted_at  Int?
 
    unit     Unit     @relation(fields: [unit_id], references: [id])
    category Categories @relation(fields: [category_id], references: [id])
