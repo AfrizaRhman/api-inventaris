@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, Query, } from '@nestjs/common';
+import { SkuService } from './sku.service';
 import { CreateSkuDto } from './dto/create-sku.dto';
 import { UpdateSkuDto } from './dto/update-sku.dto';
-import { SkuService } from './sku.service';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('sku')
 export class SkuController {
@@ -9,26 +10,27 @@ export class SkuController {
 
   @Post()
   create(@Body() dto: CreateSkuDto) {
-      return this.skuService.create(dto);
-    }
+    return this.skuService.createSku(dto);
+  }
 
   @Get()
-  findAll() {
-    return this.skuService.findAll();
+  findAllPaginated(@Query() paginationDto: PaginationDto) {
+    return this.skuService.findAllSkusPaginated(paginationDto);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.skuService.findOne(Number(id));
+    return this.skuService.findSkuById(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   update(@Param('id') id: string, @Body() dto: UpdateSkuDto) {
-      return this.skuService.update(Number(id), dto);
+    return this.skuService.updateSku(id, dto);
   }
 
+  // soft delete
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.skuService.remove(Number(id));
+    return this.skuService.softDeleteSku(id);
   }
 }

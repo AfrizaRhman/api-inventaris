@@ -9,3 +9,5 @@ import { PrismaService } from 'src/prisma/prisma.service';
   exports: [SkuService],
 })
 export class SkuModule {}
+
+export { SkuService };
