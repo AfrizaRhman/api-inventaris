@@ -10,7 +10,7 @@ import { Type } from 'class-transformer';
 
 export class LoanDetailDto {
   @IsInt()
-  sku_id: number;
+  sku_id: string;
 
   @IsInt()
   qty: number;
