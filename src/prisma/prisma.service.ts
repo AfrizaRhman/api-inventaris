@@ -64,6 +64,11 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     return this.extendedClient.item_Movement;
   }
 
+  get categories() {
+  return this.extendedClient.categories;
+}
+
+
   async onModuleInit() {
     await this.baseClient.$connect();
   }
