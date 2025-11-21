@@ -121,7 +121,7 @@ model Odtw {
 model Loans {
   id           Int           @id @default(autoincrement())
   name         String
-  ...
+
   loan_details LoanDetail[]
 }
 
