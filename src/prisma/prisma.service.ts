@@ -34,7 +34,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
           Sku: true,
           Loan: true,
           LoanDetail: true,
-          Item_Movement: true,
+          ItemMovement: true,
           ItemMovementDetail: true,
         },        
         defaultConfig: {
