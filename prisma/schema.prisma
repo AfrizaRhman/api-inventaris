@@ -74,23 +74,20 @@ model Sku {
   item_id       String
   code          String
   color         String?
-  status        String?      @default("available")
+  status        String?     @default("available")
   warehouse_id  String?
 
-  created_at    Int?         // optional, if you want timestamps
-  updated_at    Int?
-  deleted_at    Int?
-
-   created_at    Int?         // optional, if you want timestamps
-   updated_at    Int?
-   deleted_at    Int?
+  created_at    DateTime?   @default(now())
+  updated_at    DateTime?
+  deleted_at    DateTime?
 
   // relations
-  item      Item     @relation(fields: [item_id], references: [id])
-  warehouse Warehouse? @relation(fields: [warehouse_id], references: [id])
-  loanDetail LoanDetail[]
-  itemMovementDetail ItemMovementDetail[]
+  item                 Item                 @relation(fields: [item_id], references: [id])
+  warehouse            Warehouse?           @relation(fields: [warehouse_id], references: [id])
+  loanDetail           LoanDetail[]
+  itemMovementDetail   ItemMovementDetail[]
 }
+
 
 
 model User {
@@ -132,9 +129,9 @@ model Loans {
 }
 
 model LoanDetail {
-  id          Int     @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   loan_id     Int
-  sku_id      Int
+  sku_id      String   // <- harus String karena Sku.id = String
   qty         Int
   return_date DateTime?
   status      String?
@@ -158,10 +155,10 @@ model Item_Movement {
 }
 
 model ItemMovementDetail {
-  id              String @id @default(uuid())
+  id               String @id @default(uuid())
   item_movement_id String
-  sku_id          String
-  sku_code        String?
+  sku_id           String
+  sku_code         String?
 
   movement Item_Movement @relation(fields: [item_movement_id], references: [id])
   sku      Sku           @relation(fields: [sku_id], references: [id])

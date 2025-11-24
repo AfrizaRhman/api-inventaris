@@ -16,16 +16,17 @@ import {
 import { CreateItemMovementDto } from './dto/create-item-movement.dto';
 import { UpdateItemMovementDto } from './dto/update-item-movement.dto';
 
-import { ItemMovement } from '@prisma/client';
+// gunakan Prisma model yang benar
+import { Item_Movement } from '@prisma/client';
+
 import { QueryBuilderService } from '../common/services/query-builder.service';
 
 @Injectable()
-export class ItemMovementService extends BaseService<ItemMovement> {
+export class ItemMovementService extends BaseService<Item_Movement> {
   constructor(protected prismaService: PrismaService) {
     super(prismaService);
   }
 
-  // gunakan same pattern seperti ODTW: this.prismaService.db
   protected getModel() {
     return (this.prismaService.db as any).itemMovement;
   }
@@ -55,13 +56,11 @@ export class ItemMovementService extends BaseService<ItemMovement> {
         'updated_by',
       ],
       defaultSearchFields: ['name', 'memo_number', 'email', 'necessity'],
-      // softDeleteField omitted karena schema tidak punya deleted_at
     };
   }
 
-  // ---------------- CREATE ----------------
+  // CREATE
   async createItemMovement(data: CreateItemMovementDto) {
-    // optional conflict check (name + email)
     const exists = await (this.prismaService.db as any).itemMovement.findFirst({
       where: {
         AND: [{ name: data.name }, { email: data.email }],
@@ -69,7 +68,9 @@ export class ItemMovementService extends BaseService<ItemMovement> {
     });
 
     if (exists) {
-      throw new ConflictException('Item Movement dengan nama/email ini sudah ada');
+      throw new ConflictException(
+        'Item Movement dengan nama/email ini sudah ada',
+      );
     }
 
     return (this.prismaService.db as any).itemMovement.create({
@@ -93,7 +94,12 @@ export class ItemMovementService extends BaseService<ItemMovement> {
       include: {
         details: {
           include: {
-            sku: true,
+            sku: {
+              include: {
+                item: true,
+                warehouse: true,
+              },
+            },
             item: true,
           },
         },
@@ -101,7 +107,7 @@ export class ItemMovementService extends BaseService<ItemMovement> {
     });
   }
 
-  // ---------------- PAGINATED LIST ----------------
+  // LIST
   async findAllItemMovementsPaginated(pagination: PaginationDto) {
     const select = {
       id: true,
@@ -114,11 +120,10 @@ export class ItemMovementService extends BaseService<ItemMovement> {
       updated_by: true,
     };
 
-    // BaseService.findAllPaginated digunakan seperti ODTW
     return this.findAllPaginated(pagination, {}, select);
   }
 
-  // ---------------- FIND BY ID ----------------
+  // FIND BY ID
   async findItemMovementById(id: string) {
     const data = await (this.prismaService.db as any).itemMovement.findUnique({
       where: { id },
@@ -129,7 +134,6 @@ export class ItemMovementService extends BaseService<ItemMovement> {
           include: {
             sku: {
               include: {
-                // tergantung schema sku relation, tetap hati-hati
                 item: true,
                 warehouse: true,
               },
@@ -144,14 +148,12 @@ export class ItemMovementService extends BaseService<ItemMovement> {
     return data;
   }
 
-  // ---------------- UPDATE ----------------
+  // UPDATE
   async updateItemMovement(id: string, data: UpdateItemMovementDto) {
-    // pastikan ada dulu
     await this.findItemMovementById(id);
 
     const { details, ...rest } = data as any;
 
-    // update parent
     await (this.prismaService.db as any).itemMovement.update({
       where: { id },
       data: {
@@ -161,13 +163,11 @@ export class ItemMovementService extends BaseService<ItemMovement> {
       },
     });
 
-    // jika details dikirim -> hapus semua lalu createMany (simple replace)
     if (Array.isArray(details)) {
       await (this.prismaService.db as any).itemMovementDetail.deleteMany({
         where: { item_movement_id: id },
       });
 
-      // gunakan createMany jika banyak, atau loop create
       if (details.length > 0) {
         await (this.prismaService.db as any).itemMovementDetail.createMany({
           data: details.map((d) => ({
@@ -182,12 +182,10 @@ export class ItemMovementService extends BaseService<ItemMovement> {
     return this.findItemMovementById(id);
   }
 
-  // ---------------- HARD DELETE ----------------
-  // (schema tidak punya deleted_at, jadi kita tampilkan hard delete. Kalau mau soft delete, tambahkan field deleted_at di schema)
+  // DELETE
   async removeItemMovement(id: string) {
     await this.findItemMovementById(id);
 
-    // hapus details dulu untuk safety (cascade mungkin sudah ada tergantung schema)
     await (this.prismaService.db as any).itemMovementDetail.deleteMany({
       where: { item_movement_id: id },
     });
@@ -197,7 +195,7 @@ export class ItemMovementService extends BaseService<ItemMovement> {
     });
   }
 
-  // ---------------- FILTER ----------------
+  // FILTER
   async getItemMovementsByFilter(filters: ColumnFilterDto[]) {
     const options = this.getQueryOptions();
     const params = QueryBuilderService.buildQueryParams(
@@ -205,7 +203,6 @@ export class ItemMovementService extends BaseService<ItemMovement> {
       options,
     );
 
-    // BaseService.findAll menerima params (sama seperti ODTW)
     return this.findAll(params);
   }
 }

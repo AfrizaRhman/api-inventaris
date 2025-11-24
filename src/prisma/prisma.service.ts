@@ -24,15 +24,20 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
           Categories: true,
           Item: true,
           Sku: true,
-          Loan: true,
+
+          // ❌ SALAH: Loan
+          // ✔️ BENAR: Loans
+          Loans: true,
+
           LoanDetail: true,
+
           Item_Movement: true,
           ItemMovementDetail: true,
-        },        
+        },
         defaultConfig: {
           field: 'deleted_at',
           createValue: (deleted) => {
-            if (deleted) return Math.floor(Date.now() / 1000);
+            if (deleted) return new Date(); // karena field kamu DateTime?
             return null;
           },
         },
@@ -41,7 +46,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   }
 
   get db() {
-  return this.extendedClient;
+    return this.extendedClient;
   }
 
   get warehouse() {
@@ -57,7 +62,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   }
 
   get loans() {
-    return this.extendedClient.loan;
+    return this.extendedClient.loans; // ❌ loan —> ✔️ loans
   }
 
   get itemMovement() {
@@ -65,9 +70,8 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   }
 
   get categories() {
-  return this.extendedClient.categories;
-}
-
+    return this.extendedClient.categories;
+  }
 
   async onModuleInit() {
     await this.baseClient.$connect();
