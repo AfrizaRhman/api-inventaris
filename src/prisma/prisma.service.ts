@@ -8,16 +8,8 @@ import { createSoftDeleteExtension } from 'prisma-extension-soft-delete';
 
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
-    warehouse: any;
-    [x: string]: any;
   private readonly baseClient: PrismaClient;
   private readonly extendedClient: any;
-
-  // Semua custom accessor cukup ditulis sekali
-  item: any;
-  sku: any;
-  loans: any;
-  itemMovement: any;
 
   constructor() {
     this.baseClient = new PrismaClient();
@@ -29,14 +21,14 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
           Odtw: true,
           Warehouse: true,
           Unit: true,
-          Categories: true,
+          Category: true,  
           Item: true,
           Sku: true,
-          Loan: true,
+          Loans: true,
           LoanDetail: true,
           ItemMovement: true,
           ItemMovementDetail: true,
-        },        
+        } as any,        
         defaultConfig: {
           field: 'deleted_at',
           createValue: (deleted) => {
@@ -49,8 +41,33 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   }
 
   get db() {
-    return this.extendedClient;
+  return this.extendedClient;
   }
+
+  get warehouse() {
+    return this.extendedClient.warehouse;
+  }
+
+  get sku() {
+    return this.extendedClient.sku;
+  }
+
+  get item() {
+    return this.extendedClient.item;
+  }
+
+  get loans() {
+    return this.extendedClient.loan;
+  }
+
+  get itemMovement() {
+    return this.extendedClient.item_Movement;
+  }
+
+  get categories() {
+  return this.extendedClient.categories;
+}
+
 
   async onModuleInit() {
     await this.baseClient.$connect();
