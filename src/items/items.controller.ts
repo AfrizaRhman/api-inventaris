@@ -6,12 +6,14 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   ValidationPipe,
   UsePipes,
 } from '@nestjs/common';
 import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('items')
 export class ItemsController {
@@ -20,26 +22,26 @@ export class ItemsController {
   @Post()
   @UsePipes(new ValidationPipe({ whitelist: true }))
   create(@Body() dto: CreateItemDto) {
-    return this.itemsService.create(dto);
+    return this.itemsService.createItem(dto);
   }
 
   @Get()
-  findAll() {
-    return this.itemsService.findAll();
+  findAll(@Query() pagination: PaginationDto) {
+    return this.itemsService.findAllItemsPaginated(pagination);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.itemsService.findOne(id);
+    return this.itemsService.findItemById(id);
   }
 
   @Put(':id')
   update(@Param('id') id: string, @Body() dto: UpdateItemDto) {
-    return this.itemsService.update(id, dto);
+    return this.itemsService.updateItem(id, dto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.itemsService.remove(id);
+    return this.itemsService.softDeleteItem(id);
   }
 }

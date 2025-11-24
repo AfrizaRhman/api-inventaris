@@ -9,8 +9,8 @@ CREATE TABLE "users" (
     "status" VARCHAR(10) DEFAULT 'active',
     "password_reset_token" TEXT,
     "password_reset_expires" INTEGER,
-    "created_at" INTEGER NOT NULL DEFAULT EXTRACT(EPOCH FROM now())::integer,
-    "updated_at" INTEGER NOT NULL DEFAULT EXTRACT(EPOCH FROM now())::integer,
+    "created_at" INTEGER NOT NULL DEFAULT EXTRACT(EPOCH FROM now()),
+    "updated_at" INTEGER NOT NULL DEFAULT EXTRACT(EPOCH FROM now()),
     "deleted_at" INTEGER,
     "created_by" UUID,
     "updated_by" UUID,
@@ -76,7 +76,7 @@ CREATE TABLE "items" (
     "name" TEXT NOT NULL,
     "code" TEXT NOT NULL,
     "suplier" TEXT NOT NULL,
-    "price" DOUBLE PRECISION NOT NULL,
+    "price" REAL NOT NULL,
     "image" TEXT,
     "description" TEXT,
     "created_at" INTEGER NOT NULL DEFAULT EXTRACT(EPOCH FROM now())::integer,
@@ -189,16 +189,7 @@ CREATE INDEX "items_category_id_idx" ON "items"("category_id");
 CREATE INDEX "items_name_idx" ON "items"("name");
 
 -- CreateIndex
-CREATE INDEX "items_code_idx" ON "items"("code");
-
--- CreateIndex
 CREATE INDEX "skus_item_id_idx" ON "skus"("item_id");
-
--- CreateIndex
-CREATE INDEX "skus_warehouse_id_idx" ON "skus"("warehouse_id");
-
--- CreateIndex
-CREATE INDEX "skus_code_idx" ON "skus"("code");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "odtws_odtw_code_key" ON "odtws"("odtw_code");

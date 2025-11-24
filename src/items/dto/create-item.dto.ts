@@ -1,4 +1,5 @@
 import { IsNotEmpty, IsOptional, IsString, IsInt } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateItemDto {
   @IsNotEmpty()
@@ -10,10 +11,12 @@ export class CreateItemDto {
   supplier?: string;
 
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   price?: number;
 
   @IsNotEmpty()
+  @Type(() => Number)
   @IsInt()
   stock: number;
 
@@ -29,7 +32,6 @@ export class CreateItemDto {
   @IsString()
   image?: string;
 
-  // RELATION FIELD
   @IsNotEmpty()
   @IsString()
   unit_id: string;
@@ -37,12 +39,4 @@ export class CreateItemDto {
   @IsNotEmpty()
   @IsString()
   category_id: string;
-
-  @IsOptional()
-  @IsString()
-  warehouse_id?: string;
-
-  @IsOptional()
-  @IsString()
-  created_by?: string;
 }

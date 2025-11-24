@@ -1,57 +1,36 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Injectable } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, Query, } from '@nestjs/common';
+import { SkuService } from './sku.service';
 import { CreateSkuDto } from './dto/create-sku.dto';
 import { UpdateSkuDto } from './dto/update-sku.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
-@Injectable()
-class SkuService {
-  create(dto: CreateSkuDto) {
-    // simple stub implementation until a proper service is created
-    return dto;
-  }
-
-  findAll() {
-    return [];
-  }
-
-  findOne(id: string) {
-    return { id };
-  }
-
-  update(id: string, dto: UpdateSkuDto) {
-    return { id, ...dto };
-  }
-
-  remove(id: string) {
-    return { deleted: true, id };
-  }
-}
-
-@Controller('skus')
+@Controller('sku')
 export class SkuController {
-  constructor(private readonly service: SkuService) {}
+  constructor(private readonly skuService: SkuService) {}
 
   @Post()
   create(@Body() dto: CreateSkuDto) {
-    return this.service.create(dto);
+    return this.skuService.createSku(dto);
   }
 
   @Get()
-  findAll() {
-    return this.service.findAll();
+  findAllPaginated(@Query() paginationDto: PaginationDto) {
+    return this.skuService.findAllSkusPaginated(paginationDto);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.service.findOne(id);
+    return this.skuService.findSkuById(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   update(@Param('id') id: string, @Body() dto: UpdateSkuDto) {
-    return this.service.update(id, dto);
+    return this.skuService.updateSku(id, dto);
   }
 
+  // soft delete
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.service.remove(id);
+    return this.skuService.softDeleteSku(id);
   }
 }
