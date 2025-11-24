@@ -21,13 +21,13 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
           Odtw: true,
           Warehouse: true,
           Unit: true,
-          Category: true,  
+          Categories: true,  
           Item: true,
           Sku: true,
           Loan: true,
           LoanDetail: true,
 
-          Item_Movement: true,
+          ItemMovement: true,
           ItemMovementDetail: true,
         },        
         defaultConfig: {
@@ -37,7 +37,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
             return null;
           },
         },
-      }),
+      }) as unknown as any,
     );
   }
 

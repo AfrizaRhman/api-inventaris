@@ -17,12 +17,12 @@ import { CreateItemMovementDto } from './dto/create-item-movement.dto';
 import { UpdateItemMovementDto } from './dto/update-item-movement.dto';
 
 // gunakan Prisma model yang benar
-import { Item_Movement } from '@prisma/client';
+import { ItemMovement } from '@prisma/client';
 
 import { QueryBuilderService } from '../common/services/query-builder.service';
 
 @Injectable()
-export class ItemMovementService extends BaseService<Item_Movement> {
+export class ItemMovementService extends BaseService<ItemMovement> {
   constructor(protected prismaService: PrismaService) {
     super(prismaService);
   }
