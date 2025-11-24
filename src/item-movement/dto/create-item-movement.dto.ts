@@ -1,14 +1,13 @@
-import { IsString, IsNotEmpty, IsDateString, IsInt, IsArray, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsDateString,
+  IsOptional,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
-
-class ItemMovementDetailDto {
-  @IsInt()
-  sku_id: number;
-
-  @IsString()
-  @IsNotEmpty()
-  sku_code: string;
-}
+import { ItemMovementDetailDto } from './item-movement-detail.dto';
 
 export class CreateItemMovementDto {
   @IsString()
@@ -16,19 +15,24 @@ export class CreateItemMovementDto {
   name: string;
 
   @IsString()
-  phone_number: string;
+  @IsOptional()
+  memo_number?: string;
 
   @IsString()
-  email: string;
+  @IsOptional()
+  email?: string;
 
   @IsString()
-  necessity: string;
+  @IsOptional()
+  necessity?: string;
 
   @IsDateString()
-  request_date: string;
+  @IsOptional()
+  request_date?: string;
 
-  @IsInt()
-  created_by: number;
+  @IsString()
+  @IsOptional()
+  created_by?: string; // prisma: String?
 
   @IsArray()
   @ValidateNested({ each: true })
