@@ -21,19 +21,15 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
           Odtw: true,
           Warehouse: true,
           Unit: true,
-          Categories: true,
+          Category: true,  
           Item: true,
           Sku: true,
-
-          // ❌ SALAH: Loan
-          // ✔️ BENAR: Loans
-          Loans: true,
-
+          Loan: true,
           LoanDetail: true,
 
           Item_Movement: true,
           ItemMovementDetail: true,
-        },
+        },        
         defaultConfig: {
           field: 'deleted_at',
           createValue: (deleted) => {
