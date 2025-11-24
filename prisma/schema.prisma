@@ -38,6 +38,7 @@ model Warehouse {
   address    String?
   status     String?
   created_by String?
+
   updated_by String?
 
   deleted_at Int?
@@ -67,12 +68,16 @@ model Item {
 }
 
 model Sku {
-  id          String   @id @default(uuid())
-  item_id     String
-  code        String
-  color       String?
-  status      String?
-  warehouse_id String?
+  id            String   @id @default(uuid())
+  item_id       String
+  code          String
+  color         String?
+  status        String?      @default("available")
+  warehouse_id  String?
+
+  created_at    Int?         // optional, if you want timestamps
+  updated_at    Int?
+  deleted_at    Int?
 
    created_at    Int?         // optional, if you want timestamps
    updated_at    Int?
@@ -84,6 +89,7 @@ model Sku {
   loanDetail LoanDetail[]
   itemMovementDetail ItemMovementDetail[]
 }
+
 
 model User {
   id          String   @id @default(uuid())
@@ -116,30 +122,25 @@ model Odtw {
   deleted_at Int?
 }
 
-
-model Loan {
-  id           String    @id @default(uuid())
+model Loans {
+  id           Int           @id @default(autoincrement())
   name         String
-  phone_number String?
-  email        String?
-  necessity    String?
-  note         String?
-  loan_date    DateTime?
 
-  loan_detail LoanDetail[]
+  loan_details LoanDetail[]
 }
 
 model LoanDetail {
-  id        String   @id @default(uuid())
-  loan_id   String
-  sku_id    String
-  qty       Int?
+  id          Int     @id @default(autoincrement())
+  loan_id     Int
+  sku_id      Int
+  qty         Int
   return_date DateTime?
-  status    String?
+  status      String?
 
-  loan Loan @relation(fields: [loan_id], references: [id])
+  loan Loans @relation(fields: [loan_id], references: [id])
   sku  Sku   @relation(fields: [sku_id], references: [id])
 }
+
 
 model Item_Movement {
   id           String   @id @default(uuid())

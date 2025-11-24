@@ -162,7 +162,7 @@ export abstract class BaseService<T> {
       where,
       data: {
         ...data,
-        updated_at: Math.floor(Date.now() / 1000), // Unix timestamp
+        
       },
       ...(select && { select }),
     });
@@ -185,7 +185,7 @@ export abstract class BaseService<T> {
       where,
       data: {
         [softDeleteField]: Math.floor(Date.now() / 1000),
-        updated_at: Math.floor(Date.now() / 1000),
+        
       },
     });
   }
@@ -202,7 +202,7 @@ export abstract class BaseService<T> {
       where: { id },
       data: {
         [softDeleteField]: null,
-        updated_at: Math.floor(Date.now() / 1000),
+        
       },
     });
   }
