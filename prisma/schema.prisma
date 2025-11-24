@@ -38,6 +38,7 @@ model Warehouse {
   address    String?
   status     String?
   created_by String?
+
   updated_by String?
 
   deleted_at Int?
@@ -67,12 +68,16 @@ model Item {
 }
 
 model Sku {
-  id          String   @id @default(uuid())
-  item_id     String
-  code        String
-  color       String?
-  status      String?
-  warehouse_id String?
+  id            String   @id @default(uuid())
+  item_id       String
+  code          String
+  color         String?
+  status        String?      @default("available")
+  warehouse_id  String?
+
+  created_at    Int?         // optional, if you want timestamps
+  updated_at    Int?
+  deleted_at    Int?
 
    created_at    Int?         // optional, if you want timestamps
    updated_at    Int?
@@ -84,6 +89,7 @@ model Sku {
   loanDetail LoanDetail[]
   itemMovementDetail ItemMovementDetail[]
 }
+
 
 model User {
   id          String   @id @default(uuid())
@@ -119,7 +125,6 @@ model Odtw {
 model Loans {
   id           Int           @id @default(autoincrement())
   name         String
-  
   loan_details LoanDetail[]
 }
 
