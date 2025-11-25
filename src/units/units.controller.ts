@@ -24,24 +24,24 @@ export class UnitController {
   create(@Body() dto: CreateUnitDto) {
     return this.unitService.createUnit(dto);
   }
-// pppppp
+
   @Get()
   findAll(@Query() pagination: PaginationDto) {
     return this.unitService.findAllUnitsPaginated(pagination);
   }
 
   @Get(':id')
-findOne(@Param('id') id: string) {
-  return this.unitService.findUnitById(id);
-}
+  findOne(@Param('id') id: string) {
+    return this.unitService.findUnitById(id);
+  }
 
-@Put(':id')
-update(@Param('id') id: string, @Body() dto: UpdateUnitDto) {
-  return this.unitService.update(id, dto);
-}
+  @Put(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateUnitDto) {
+    return this.unitService.update(id, dto);
+  }
 
-@Delete(':id')
-remove(@Param('id') id: string) {
-  return this.unitService.softDeleteUnit(id);
-}
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.unitService.softDeleteUnit(id);
+  }
 }

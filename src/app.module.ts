@@ -14,6 +14,7 @@ import { SkuModule } from './sku/sku.module';
 import { WarehouseModule } from './warehouse/warehouse.module';
 import { UnitModule } from './units/units.module';
 import { CategoryModule } from './category/category.module';
+import { LoansModule } from './loans/loans.module';
 
 
 @Module({
@@ -33,6 +34,7 @@ import { CategoryModule } from './category/category.module';
     WarehouseModule, // <--- WAJIB ADA
     UnitModule,
     CategoryModule,
+    LoansModule,
 
   ],
   controllers: [AppController],

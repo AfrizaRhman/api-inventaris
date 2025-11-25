@@ -15,7 +15,7 @@ import { QueryBuilderService } from './query-builder.service';
 
 @Injectable()
 export abstract class BaseService<T> {
-  constructor(protected prismaService: PrismaService) {}
+  constructor(protected prismaService: PrismaService) { }
 
   /**
    * Abstract method to get the Prisma model delegate
@@ -132,12 +132,15 @@ export abstract class BaseService<T> {
   /**
    * Create a new record
    */
-  async create(data: any, select?: Record<string, any>): Promise<T> {
+  async create(
+    data: any,
+    include?: Record<string, any>,
+  ): Promise<T> {
     const model = this.getModel();
 
-    return await model. create({
+    return await model.create({
       data,
-      ...(select && { select }),
+      ...(include && { include }),
     });
   }
 
@@ -162,7 +165,7 @@ export abstract class BaseService<T> {
       where,
       data: {
         ...data,
-        
+
       },
       ...(select && { select }),
     });
@@ -185,7 +188,7 @@ export abstract class BaseService<T> {
       where,
       data: {
         [softDeleteField]: Math.floor(Date.now() / 1000),
-        
+
       },
     });
   }
@@ -202,7 +205,7 @@ export abstract class BaseService<T> {
       where: { id },
       data: {
         [softDeleteField]: null,
-        
+
       },
     });
   }

@@ -27,9 +27,9 @@ export class UnitService extends BaseService<any> {
 
   protected getQueryOptions(): QueryBuilderOptions {
     return {
-      defaultSortField: 'createdAt',
-      defaultSortDirection: SortDirection.DESC,
-      allowedSortFields: ['id', 'name', 'createdAt', 'updatedAt'],
+      defaultSortField: 'id', // FIXED
+      defaultSortDirection: SortDirection.ASC,
+      allowedSortFields: ['id', 'name', 'deleted_at'], // FIXED
       allowedFilterFields: ['id', 'name'],
       defaultSearchFields: ['name'],
       softDeleteField: 'deleted_at',
@@ -45,7 +45,7 @@ export class UnitService extends BaseService<any> {
   async findAllUnitsPaginated(paginationDto: PaginationDto, where = {}) {
     return this.findAllPaginated(
       paginationDto,
-      { ...where, deleted_at: null },
+      { ...where, deleted_at: null }, // fetch only NOT deleted record
     );
   }
 
@@ -60,10 +60,12 @@ export class UnitService extends BaseService<any> {
   }
 
   async softDeleteUnit(id: string) {
+    // ensure exists
     await this.findUnitById(id);
 
+    // FIXED → deleted_at as Date
     return this.update(id, {
-      deleted_at: Math.floor(Date.now() / 1000),
+      deleted_at: new Date(),
     });
   }
 
