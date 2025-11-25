@@ -82,7 +82,7 @@ model Sku {
   // relations
   item               Item                 @relation(fields: [item_id], references: [id])
   warehouse          Warehouse?           @relation(fields: [warehouse_id], references: [id])
-  loanDetail         LoanDetail[]
+  loan_details         loan_details[]
   itemMovementDetail ItemMovementDetail[]
 }
 
@@ -118,24 +118,36 @@ model Odtw {
   deleted_at Int?
 }
 
-model Loan {
-  id           String    @id @default(uuid())
+model loans {
+  id           String        @id @default(uuid())
   name         String
+  phone_number String
+  email        String?
+  necessity    String?
+  note         String?
+  loan_date    DateTime      @default(now())
+  deleted_at  Int?     // <── WAJIB ADA
 
-  loan_details LoanDetail[]
+  loan_details loan_details[]
+
+  @@map("loans")
 }
 
-model LoanDetail {
-  id          String    @id @default(uuid())
-  loan_id     String
-  sku_id      String
-  qty         Int?
+model loan_details {
+  id         String   @id @default(uuid())
+  loan_id    String
+  sku_id     String
+  qty        Int
   return_date DateTime?
-  status      String?
+  status      String  
+  deleted_at  Int?     // <── WAJIB ADA
+  
+  loan loans @relation(fields: [loan_id], references: [id], onDelete: Cascade)
+  sku Sku @relation(fields: [sku_id], references: [id])
 
-  loan Loan @relation(fields: [loan_id], references: [id])
-  sku  Sku  @relation(fields: [sku_id], references: [id])
+  @@map("loan_details")
 }
+
 
 
 model Item_Movement {

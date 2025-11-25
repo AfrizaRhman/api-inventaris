@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { LoansService } from './loans.service';
 import { CreateLoanDto } from './dto/create-loan.dto';
 import { UpdateLoanDto } from './dto/update-loan.dto';
@@ -17,9 +8,8 @@ export class LoansController {
   constructor(private readonly loansService: LoansService) {}
 
   @Post()
-  create(@Body() dto: CreateLoanDto, @Req() req) {
-    const adminName = req.user?.name || 'SYSTEM';
-    return this.loansService.create(dto, adminName);
+  create(@Body() dto: CreateLoanDto) {
+    return this.loansService.create(dto);
   }
 
   @Get()
@@ -29,17 +19,16 @@ export class LoansController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.loansService.findOne(+id);
+    return this.loansService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateLoanDto, @Req() req) {
-    const adminName = req.user?.name || 'SYSTEM';
-    return this.loansService.update(+id, dto, adminName);
+  update(@Param('id') id: string, @Body() dto: UpdateLoanDto) {
+    return this.loansService.update(id, dto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.loansService.remove(+id);
+    return this.loansService.remove(id);
   }
 }

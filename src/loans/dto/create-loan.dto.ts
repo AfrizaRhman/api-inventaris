@@ -1,48 +1,32 @@
 import {
   IsString,
   IsOptional,
-  IsArray,
-  IsInt,
-  ValidateNested,
+  IsEmail,
   IsDateString,
+  ValidateNested,
+  IsArray,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-
-export class LoanDetailDto {
-  @IsInt()
-  sku_id: string;
-
-  @IsInt()
-  qty: number;
-
-  @IsOptional()
-  @IsDateString()
-  return_date?: string;
-
-  @IsOptional()
-  @IsString()
-  status?: string;
-}
+import { LoanDetailDto } from './create-loan_detail.dto';
 
 export class CreateLoanDto {
   @IsString()
   name: string;
 
-  @IsOptional()
   @IsString()
-  phone_number?: string;
+  phone_number: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string | null;
 
   @IsOptional()
   @IsString()
-  email?: string;
+  necessity?: string | null;
 
   @IsOptional()
   @IsString()
-  necessity?: string;
-
-  @IsOptional()
-  @IsString()
-  note?: string;
+  note?: string | null;
 
   @IsOptional()
   @IsDateString()

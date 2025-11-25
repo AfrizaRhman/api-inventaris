@@ -24,8 +24,8 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
           Category: true,  
           Item: true,
           Sku: true,
-          Loans: true,
-          LoanDetail: true,
+          loans: true,
+          loan_details: true,
           Item_Movement: true,
           ItemMovementDetail: true,
         } as any,        
@@ -57,7 +57,11 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   }
 
   get loans() {
-    return this.extendedClient.loan;
+    return this.extendedClient.loans;
+  }
+
+  get loan_details() {
+    return this.extendedClient.loan_details;
   }
 
   get itemMovement() {
