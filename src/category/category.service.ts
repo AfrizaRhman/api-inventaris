@@ -19,6 +19,7 @@ export class CategoryService {
   // List (exclude soft deleted automatically)
   async findAll() {
     return this.prisma.db.category.findMany({
+      where: {deleted_at: null},
       orderBy: { created_at: 'desc' },
     });
   }
@@ -36,7 +37,6 @@ export class CategoryService {
       where: { id },
       data: {
         ...data,
-        updated_at: Math.floor(Date.now() / 1000),
         updated_by: userId,
       },
     });
@@ -44,11 +44,12 @@ export class CategoryService {
 
   // Soft delete (thanks to prisma-extension-soft-delete)
   async remove(id: string, userId: string) {
-  return this.prisma.db.category.delete({
+  return this.prisma.db.category.update({
     where: { id },
     data: {
       deleted_by: userId,
-      },
-    });
-  }
+      deleted_at: Math.floor(Date.now() / 1000)
+    },
+  });
+}
 }
