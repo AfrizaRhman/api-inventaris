@@ -76,7 +76,7 @@ model Sku {
 
   created_at Int? // optional, if you want timestamps
   updated_at Int?
-  deleted_at Int?
+  deleted_at DateTime?
 
   // relations
   item               Item                 @relation(fields: [item_id], references: [id])

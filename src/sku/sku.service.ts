@@ -21,12 +21,17 @@ export class SkuService {
     });
   }
 
-  update(id: number, data) {
-    return this.prisma.sku.update({
-      where: { id },
-      data,
-    });
+  update(id: string, data) {
+  if (!id) {
+    throw new Error("ID tidak boleh kosong");
   }
+
+  return this.prisma.sku.update({
+    where: { id },
+    data,
+  });
+}
+
 
   remove(id: number) {
     return this.prisma.sku.delete({

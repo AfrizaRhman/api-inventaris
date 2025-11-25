@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete, Put } from '@nestjs/common';
 import { SkuService } from './sku.service';
+import { UpdateSkuDto } from './dto/update-sku.dto';
 
 @Controller('sku')
 export class SkuController {
@@ -20,10 +21,10 @@ export class SkuController {
     return this.skuService.findOne(Number(id));
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() data) {
-    return this.skuService.update(Number(id), data);
-  }
+  @Put(':id')
+  update(@Param('id') id: string, @Body() data: UpdateSkuDto) {
+  return this.skuService.update(id, data);
+}
 
   @Delete(':id')
   remove(@Param('id') id: string) {
