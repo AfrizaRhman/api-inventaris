@@ -14,6 +14,10 @@ export class CreateSkuDto {
   code: string;
 
   @IsString()
+  @IsNotEmpty()
+  color: string;
+
+  @IsString()
   @IsOptional()
   status?: string = 'available';
 }

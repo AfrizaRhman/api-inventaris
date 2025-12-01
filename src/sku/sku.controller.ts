@@ -18,16 +18,16 @@ export class SkuController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.skuService.findOne(Number(id));
+    return this.skuService.findOne(id);  // ← FIX
   }
 
   @Put(':id')
   update(@Param('id') id: string, @Body() data: UpdateSkuDto) {
-  return this.skuService.update(id, data);
-}
+    return this.skuService.update(id, data);  // ← FIX
+  }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.skuService.remove(Number(id));
+    return this.skuService.remove(id);  // ← FIX
   }
 }
