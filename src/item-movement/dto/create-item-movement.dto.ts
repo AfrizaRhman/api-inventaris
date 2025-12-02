@@ -16,7 +16,7 @@ export class CreateItemMovementDto {
 
   @IsString()
   @IsOptional()
-  memo_number?: string;
+  phone_number?: string;
 
   @IsString()
   @IsOptional()
@@ -32,7 +32,7 @@ export class CreateItemMovementDto {
 
   @IsString()
   @IsOptional()
-  created_by?: string; // prisma: String?
+  created_by?: string;
 
   @IsArray()
   @ValidateNested({ each: true })

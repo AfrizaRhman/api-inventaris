@@ -15,20 +15,16 @@ import {
 
 import { CreateItemMovementDto } from './dto/create-item-movement.dto';
 import { UpdateItemMovementDto } from './dto/update-item-movement.dto';
-
-// gunakan Prisma model yang benar
-import { ItemMovement } from '@prisma/client';
-
-import { QueryBuilderService } from '../common/services/query-builder.service';
+import { QueryBuilderService } from 'src/common/services/query-builder.service';
 
 @Injectable()
-export class ItemMovementService extends BaseService<ItemMovement> {
+export class ItemMovementService extends BaseService<any> {
   constructor(protected prismaService: PrismaService) {
     super(prismaService);
   }
 
   protected getModel() {
-    return (this.prismaService.db as any).itemMovement;
+    return this.prismaService.db.itemMovement;
   }
 
   protected getQueryOptions(): QueryBuilderOptions {
@@ -38,7 +34,6 @@ export class ItemMovementService extends BaseService<ItemMovement> {
       allowedSortFields: [
         'id',
         'name',
-        'memo_number',
         'email',
         'necessity',
         'request_date',
@@ -48,20 +43,22 @@ export class ItemMovementService extends BaseService<ItemMovement> {
       allowedFilterFields: [
         'id',
         'name',
-        'memo_number',
         'email',
         'necessity',
         'request_date',
         'created_by',
         'updated_by',
       ],
-      defaultSearchFields: ['name', 'memo_number', 'email', 'necessity'],
+      defaultSearchFields: ['name', 'email', 'necessity'],
     };
   }
 
+  // -------------------------------------------------------------
   // CREATE
+  // -------------------------------------------------------------
   async createItemMovement(data: CreateItemMovementDto) {
-    const exists = await (this.prismaService.db as any).itemMovement.findFirst({
+    // Duplicate check — tidak pakai deleted_at
+    const exists = await this.prismaService.db.itemMovement.findFirst({
       where: {
         AND: [{ name: data.name }, { email: data.email }],
       },
@@ -73,24 +70,24 @@ export class ItemMovementService extends BaseService<ItemMovement> {
       );
     }
 
-    return (this.prismaService.db as any).itemMovement.create({
+    return this.prismaService.db.itemMovement.create({
       data: {
         name: data.name,
-        memo_number: data.memo_number ?? null,
+        phone_number: data.phone_number ?? null,
         email: data.email ?? null,
         necessity: data.necessity ?? null,
         request_date: data.request_date ? new Date(data.request_date) : null,
         created_by: data.created_by ?? null,
         updated_by: null,
-        details: data.details
-          ? {
-              create: data.details.map((d) => ({
-                sku_id: d.sku_id,
-                item_id: d.item_id ?? null,
-              })),
-            }
-          : undefined,
+
+        details: {
+          create: data.details.map((d) => ({
+            sku_id: d.sku_id,
+            sku_code: d.sku_code ?? null,
+          })),
+        },
       },
+
       include: {
         details: {
           include: {
@@ -100,20 +97,21 @@ export class ItemMovementService extends BaseService<ItemMovement> {
                 warehouse: true,
               },
             },
-            item: true,
           },
         },
       },
     });
   }
 
-  // LIST
+  // -------------------------------------------------------------
+  // LIST PAGINATED
+  // -------------------------------------------------------------
   async findAllItemMovementsPaginated(pagination: PaginationDto) {
     const select = {
       id: true,
       name: true,
-      memo_number: true,
       email: true,
+      phone_number: true,
       necessity: true,
       request_date: true,
       created_by: true,
@@ -123,13 +121,13 @@ export class ItemMovementService extends BaseService<ItemMovement> {
     return this.findAllPaginated(pagination, {}, select);
   }
 
+  // -------------------------------------------------------------
   // FIND BY ID
+  // -------------------------------------------------------------
   async findItemMovementById(id: string) {
-    const data = await (this.prismaService.db as any).itemMovement.findUnique({
+    const data = await this.prismaService.db.itemMovement.findUnique({
       where: { id },
       include: {
-        createdBy: true,
-        updatedBy: true,
         details: {
           include: {
             sku: {
@@ -138,7 +136,6 @@ export class ItemMovementService extends BaseService<ItemMovement> {
                 warehouse: true,
               },
             },
-            item: true,
           },
         },
       },
@@ -148,32 +145,38 @@ export class ItemMovementService extends BaseService<ItemMovement> {
     return data;
   }
 
+  // -------------------------------------------------------------
   // UPDATE
+  // -------------------------------------------------------------
   async updateItemMovement(id: string, data: UpdateItemMovementDto) {
     await this.findItemMovementById(id);
 
-    const { details, ...rest } = data as any;
+    const { details, ...rest } = data;
 
-    await (this.prismaService.db as any).itemMovement.update({
+    // Update header
+    await this.prismaService.db.itemMovement.update({
       where: { id },
       data: {
         ...rest,
         updated_by: data.updated_by ?? null,
-        request_date: data.request_date ? new Date(data.request_date) : undefined,
+        request_date: data.request_date
+          ? new Date(data.request_date)
+          : undefined,
       },
     });
 
+    // Update detail list
     if (Array.isArray(details)) {
-      await (this.prismaService.db as any).itemMovementDetail.deleteMany({
+      await this.prismaService.db.itemMovementDetail.deleteMany({
         where: { item_movement_id: id },
       });
 
       if (details.length > 0) {
-        await (this.prismaService.db as any).itemMovementDetail.createMany({
+        await this.prismaService.db.itemMovementDetail.createMany({
           data: details.map((d) => ({
             item_movement_id: id,
             sku_id: d.sku_id,
-            item_id: d.item_id ?? null,
+            sku_code: d.sku_code ?? null,
           })),
         });
       }
@@ -182,20 +185,24 @@ export class ItemMovementService extends BaseService<ItemMovement> {
     return this.findItemMovementById(id);
   }
 
+  // -------------------------------------------------------------
   // DELETE
+  // -------------------------------------------------------------
   async removeItemMovement(id: string) {
     await this.findItemMovementById(id);
 
-    await (this.prismaService.db as any).itemMovementDetail.deleteMany({
+    await this.prismaService.db.itemMovementDetail.deleteMany({
       where: { item_movement_id: id },
     });
 
-    return (this.prismaService.db as any).itemMovement.delete({
+    return this.prismaService.db.itemMovement.delete({
       where: { id },
     });
   }
 
+  // -------------------------------------------------------------
   // FILTER
+  // -------------------------------------------------------------
   async getItemMovementsByFilter(filters: ColumnFilterDto[]) {
     const options = this.getQueryOptions();
     const params = QueryBuilderService.buildQueryParams(

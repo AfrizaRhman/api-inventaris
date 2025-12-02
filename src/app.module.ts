@@ -15,6 +15,8 @@ import { WarehouseModule } from './warehouse/warehouse.module';
 import { UnitModule } from './units/units.module';
 import { CategoryModule } from './category/category.module';
 
+// 🔥 IMPORT INI
+import { ItemMovementModule } from './item-movement/item-movement.module';
 
 @Module({
   imports: [
@@ -28,12 +30,14 @@ import { CategoryModule } from './category/category.module';
     OdtwModule,
     KnowledgeModule,
     VisitorModule,
-    ItemsModule, 
+    ItemsModule,
     SkuModule,
-    WarehouseModule, // <--- WAJIB ADA
+    WarehouseModule,
     UnitModule,
     CategoryModule,
 
+    // 🔥 DAFTARKAN MODULE NYA DISINI
+    ItemMovementModule,
   ],
   controllers: [AppController],
   providers: [AppService],

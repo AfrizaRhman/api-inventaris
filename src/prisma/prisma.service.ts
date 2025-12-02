@@ -14,6 +14,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   constructor() {
     this.baseClient = new PrismaClient();
 
+    // Soft Delete Extension
     this.extendedClient = this.baseClient.$extends(
       createSoftDeleteExtension({
         models: {
@@ -21,30 +22,30 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
           Odtw: true,
           Warehouse: true,
           Unit: true,
-          Categories: true,  
+          Categories: true,
           Item: true,
           Sku: true,
           Loan: true,
           LoanDetail: true,
-
           ItemMovement: true,
           ItemMovementDetail: true,
-        },        
+        },
         defaultConfig: {
           field: 'deleted_at',
-          createValue: (deleted) => {
-            if (deleted) return new Date(); // karena field kamu DateTime?
-            return null;
-          },
+          createValue: (deleted) => (deleted ? new Date() : null),
+          // Jika mau deleted_at bisa dipakai di where, aktifkan ini:
+          // allowToUseFieldInQuery: true,
         },
       }) as unknown as any,
     );
   }
 
-  get db() {
+  // Akses seluruh Prisma Client
+  get db() {  
     return this.extendedClient;
   }
 
+  // Model accessors yg benar (harus mengikuti Prisma Client)
   get warehouse() {
     return this.extendedClient.warehouse;
   }
@@ -57,12 +58,20 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     return this.extendedClient.item;
   }
 
-  get loans() {
-    return this.extendedClient.loans; // ❌ loan —> ✔️ loans
+  get loan() {
+    return this.extendedClient.loan; // ✔ benar, bukan loans
+  }
+
+  get loanDetail() {
+    return this.extendedClient.loanDetail;
   }
 
   get itemMovement() {
-    return this.extendedClient.item_Movement;
+    return this.extendedClient.itemMovement; // ✔ benar, bukan item_Movement
+  }
+
+  get itemMovementDetail() {
+    return this.extendedClient.itemMovementDetail;
   }
 
   get categories() {

@@ -11,7 +11,7 @@ export class LoansService {
   // CREATE LOAN + MULTIPLE DETAILS
   // ============================
   async create(dto: CreateLoanDto, adminName: string) {
-    return this.prisma.loans.create({
+    return this.prisma.loan.create({
       data: {
         name: dto.name,
         phone_number: dto.phone_number,
@@ -39,7 +39,7 @@ export class LoansService {
   // GET ALL
   // ============================
   findAll() {
-    return this.prisma.loans.findMany({
+    return this.prisma.loan.findMany({
       include: {
         loan_details: {
           include: { sku: true },
@@ -52,7 +52,7 @@ export class LoansService {
   // GET ONE
   // ============================
   findOne(id: number) {
-    return this.prisma.loans.findUnique({
+    return this.prisma.loan.findUnique({
       where: { id },
       include: {
         loan_details: {
@@ -67,7 +67,7 @@ export class LoansService {
   // ============================
   async update(id: number, dto: UpdateLoanDto, adminName: string) {
     // Step 1: update parent loan
-    const loan = await this.prisma.loans.update({
+    const loan = await this.prisma.loan.update({
       where: { id },
       data: {
         name: dto.name,
@@ -107,7 +107,7 @@ export class LoansService {
   // DELETE LOAN (+ cascade)
   // ============================
   remove(id: number) {
-    return this.prisma.loans.delete({
+    return this.prisma.loan.delete({
       where: { id },
     });
   }

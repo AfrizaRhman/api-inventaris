@@ -193,11 +193,12 @@ model ItemMovement {
   request_date DateTime?
   created_by   String?
   updated_by   String?
+  deleted_at   DateTime?
 
-  detail ItemMovementDetail[]
-
-  @@map("item_movement") // kalau tabel asli memakai snake_case
+  details ItemMovementDetail[]
 }
+
+
 
 /**
  * ================================
@@ -205,13 +206,14 @@ model ItemMovement {
  * ================================
  */
 model ItemMovementDetail {
-  id               String  @id @default(uuid())
+  id               String   @id @default(uuid())
   item_movement_id String
   sku_id           String
   sku_code         String?
+  deleted_at       DateTime?
 
-  movement ItemMovement @relation(fields: [item_movement_id], references: [id])
-  sku      Sku          @relation(fields: [sku_id], references: [id])
-
-  @@map("item_movement_detail")
+  item_movement ItemMovement @relation(fields: [item_movement_id], references: [id])
+  sku           Sku          @relation(fields: [sku_id], references: [id])
 }
+
+
