@@ -15,20 +15,20 @@ export class SkuService {
     return this.prisma.sku.findMany();
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return this.prisma.sku.findUnique({
       where: { id },
     });
   }
 
-  update(id: number, data) {
+  update(id: string, data) {
     return this.prisma.sku.update({
       where: { id },
       data,
     });
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return this.prisma.sku.delete({
       where: { id },
     });

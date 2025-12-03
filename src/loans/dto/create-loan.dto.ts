@@ -2,27 +2,11 @@ import {
   IsString,
   IsOptional,
   IsArray,
-  IsInt,
   ValidateNested,
   IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-
-export class LoanDetailDto {
-  @IsInt()
-  sku_id: number;
-
-  @IsInt()
-  qty: number;
-
-  @IsOptional()
-  @IsDateString()
-  return_date?: string;
-
-  @IsOptional()
-  @IsString()
-  status?: string;
-}
+import { LoanDetailDto } from './create-loan-details.dto';
 
 export class CreateLoanDto {
   @IsString()

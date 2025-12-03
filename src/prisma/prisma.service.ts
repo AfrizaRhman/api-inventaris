@@ -21,53 +21,55 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
           Odtw: true,
           Warehouse: true,
           Unit: true,
-          Category: true,  
+          Categories: true,
           Item: true,
           Sku: true,
           Loans: true,
           LoanDetail: true,
           ItemMovement: true,
           ItemMovementDetail: true,
-        } as any,        
+        },
+
         defaultConfig: {
           field: 'deleted_at',
-          createValue: (deleted) => {
-            if (deleted) return Math.floor(Date.now() / 1000);
-            return null;
-          },
+          createValue: (deleted) => (deleted ? new Date() : null),
         },
       }),
     );
   }
 
   get db() {
-  return this.extendedClient;
+    return this.extendedClient;
   }
 
+  // === CAMELCASE SESUAI PRISMA ===
+  get user() {
+    return this.extendedClient.user;
+  }
   get warehouse() {
     return this.extendedClient.warehouse;
   }
-
   get sku() {
     return this.extendedClient.sku;
   }
-
   get item() {
     return this.extendedClient.item;
   }
-
   get loans() {
-    return this.extendedClient.loan;
+    return this.extendedClient.loans;
   }
-
+  get loanDetail() {
+    return this.extendedClient.loanDetail; // FIXED
+  }
   get itemMovement() {
-    return this.extendedClient.item_Movement;
+    return this.extendedClient.itemMovement; // FIXED
   }
-
-  get categories() {
-  return this.extendedClient.categories;
-}
-
+  get itemMovementDetail() {
+    return this.extendedClient.itemMovementDetail; // FIXED
+  }
+  get category() {
+    return this.extendedClient.categories;
+  }
 
   async onModuleInit() {
     await this.baseClient.$connect();

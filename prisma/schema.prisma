@@ -8,11 +8,13 @@ datasource db {
 }
 
 model Unit {
-  id   String @id @default(uuid())
-  name String
+  id         String   @id @default(uuid())
+  name       String
+   deleted_at DateTime?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  item       Item[]
-  deleted_at DateTime?
+  items Item[] // <- ini WAJIB
 }
 
 model Categories {
@@ -40,7 +42,7 @@ model Warehouse {
   created_by String?
   updated_by String?
 
-  deleted_at Int?
+   deleted_at DateTime?
 
   sku Sku[]
 }
@@ -59,7 +61,7 @@ model Item {
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  deleted_at Int?
+   deleted_at DateTime?
 
   unit     Unit       @relation(fields: [unit_id], references: [id])
   category Categories @relation(fields: [category_id], references: [id])
@@ -76,12 +78,12 @@ model Sku {
 
   created_at Int? // optional, if you want timestamps
   updated_at Int?
-  deleted_at Int?
+   deleted_at DateTime?
 
   // relations
   item               Item                 @relation(fields: [item_id], references: [id])
   warehouse          Warehouse?           @relation(fields: [warehouse_id], references: [id])
-  loanDetail         LoanDetail[]
+  loan_details        LoanDetail[]
   itemMovementDetail ItemMovementDetail[]
 }
 
@@ -102,7 +104,7 @@ model User {
   odtw_id String?
   odtw    Odtw?   @relation("OdtwUsers", fields: [odtw_id], references: [id])
 
-  deleted_at Int?
+   deleted_at DateTime?
 }
 
 model Odtw {
@@ -116,31 +118,39 @@ model Odtw {
   deleted_at Int?
 }
 
-model Loan {
-  id           String    @id @default(uuid())
+model Loans {
+  id           String       @id @default(uuid())
   name         String
-  phone_number String?
+  phone_number String
   email        String?
   necessity    String?
   note         String?
-  loan_date    DateTime?
+  loan_date    DateTime     @default(now())
+  deleted_at   Int?
+  created_by   String?
+  updated_by   String?
 
-  loan_detail LoanDetail[]
+  loan_details LoanDetail[]
+
+  @@map("loans")
 }
 
 model LoanDetail {
-  id          String    @id @default(uuid())
+  id          String   @id @default(uuid())
   loan_id     String
   sku_id      String
-  qty         Int?
+  qty         Int
   return_date DateTime?
-  status      String?
+  status      String
+  deleted_at  Int?
 
-  loan Loan @relation(fields: [loan_id], references: [id])
-  sku  Sku  @relation(fields: [sku_id], references: [id])
+  loan Loans @relation(fields: [loan_id], references: [id], onDelete: Cascade)
+  sku  Sku   @relation(fields: [sku_id], references: [id])
+
+  @@map("loan_details")
 }
 
-model Item_Movement {
+model ItemMovement {
   id           String    @id @default(uuid())
   name         String
   phone_number String?
@@ -149,18 +159,23 @@ model Item_Movement {
   request_date DateTime?
   created_by   String?
   updated_by   String?
+  deleted_at   DateTime?
 
-  detail ItemMovementDetail[]
+  details ItemMovementDetail[] @relation("MovementDetails")
+
+  @@map("item_movement")
 }
+
 
 model ItemMovementDetail {
   id               String  @id @default(uuid())
   item_movement_id String
   sku_id           String
   sku_code         String?
+  deleted_at       DateTime?
 
-  movement Item_Movement @relation(fields: [item_movement_id], references: [id])
-  sku      Sku           @relation(fields: [sku_id], references: [id])
+  movement ItemMovement @relation("MovementDetails", fields: [item_movement_id], references: [id])
+  sku      Sku          @relation(fields: [sku_id], references: [id])
 
   @@map("item_movement_detail")
 }

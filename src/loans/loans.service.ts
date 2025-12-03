@@ -19,16 +19,23 @@ export class LoansService {
         created_by: adminName,
         updated_by: adminName,
 
-        loan_details: {
-          create: dto.details.map((d) => ({
-            sku_id: d.sku_id,
-            qty: d.qty,
-            return_date: d.return_date ? new Date(d.return_date) : undefined,
-            status: d.status ?? 'borrowed',
-          })),
-        },
+        loan_details:
+          dto.details && dto.details.length > 0
+            ? {
+                create: dto.details.map((d) => ({
+                  sku_id: d.sku_id,
+                  qty: d.qty,
+                  return_date: d.return_date
+                    ? new Date(d.return_date)
+                    : undefined,
+                  status: d.status ?? 'borrowed',
+                })),
+              }
+            : undefined,
       },
-      include: { loan_details: true },
+      include: {
+        loan_details: true,
+      },
     });
   }
 
@@ -44,7 +51,7 @@ export class LoansService {
     });
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return this.prisma.loans.findUnique({
       where: { id },
       include: {
@@ -57,7 +64,7 @@ export class LoansService {
     });
   }
 
-  update(id: number, dto: UpdateLoanDto, adminName: string) {
+  update(id: string, dto: UpdateLoanDto, adminName: string) {
     return this.prisma.loans.update({
       where: { id },
       data: {
@@ -69,13 +76,11 @@ export class LoansService {
         loan_date: dto.loan_date ? new Date(dto.loan_date) : undefined,
         updated_by: adminName,
       },
-      include: {
-        loan_details: true,
-      },
+      include: { loan_details: true },
     });
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return this.prisma.loans.delete({
       where: { id },
     });

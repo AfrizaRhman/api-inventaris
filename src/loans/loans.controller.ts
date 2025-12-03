@@ -29,17 +29,17 @@ export class LoansController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.loansService.findOne(+id);
+    return this.loansService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateLoanDto, @Req() req) {
     const adminName = req.user?.name || 'SYSTEM';
-    return this.loansService.update(+id, dto, adminName);
+    return this.loansService.update(id, dto, adminName);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.loansService.remove(+id);
+    return this.loansService.remove(id);
   }
 }

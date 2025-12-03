@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ItemMovementService } from './item-movement.service';
 import { ItemMovementController } from './item-movement.controller';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({
+  imports: [PrismaModule],    // <-- WAJIB
   controllers: [ItemMovementController],
-  providers: [ItemMovementService, PrismaService],
+  providers: [ItemMovementService],
 })
 export class ItemMovementModule {}

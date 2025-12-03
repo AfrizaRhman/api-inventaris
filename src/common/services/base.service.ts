@@ -15,7 +15,7 @@ import { QueryBuilderService } from './query-builder.service';
 
 @Injectable()
 export abstract class BaseService<T> {
-  constructor(protected prismaService: PrismaService) {}
+  constructor(protected prismaService: PrismaService) { }
 
   /**
    * Abstract method to get the Prisma model delegate
@@ -69,6 +69,13 @@ export abstract class BaseService<T> {
       where,
       orderBy,
     };
+
+    // === AUTO FIX ORDER BY === //
+if (queryOptions.orderBy && queryOptions.orderBy.createdAt) {
+  // jika model tidak punya createdAt, ganti ke created_at
+  queryOptions.orderBy = { created_at: queryOptions.orderBy.createdAt };
+}
+  
 
     if (finalSelect && Object.keys(finalSelect).length > 0) {
       queryOptions.select = finalSelect;
@@ -132,12 +139,15 @@ export abstract class BaseService<T> {
   /**
    * Create a new record
    */
-  async create(data: any, select?: Record<string, any>): Promise<T> {
+  async create(
+    data: any,
+    include?: Record<string, any>,
+  ): Promise<T> {
     const model = this.getModel();
 
-    return await model. create({
+    return await model.create({
       data,
-      ...(select && { select }),
+      ...(include && { include }),
     });
   }
 
@@ -162,7 +172,7 @@ export abstract class BaseService<T> {
       where,
       data: {
         ...data,
-        updated_at: Math.floor(Date.now() / 1000), // Unix timestamp
+
       },
       ...(select && { select }),
     });
@@ -185,7 +195,7 @@ export abstract class BaseService<T> {
       where,
       data: {
         [softDeleteField]: Math.floor(Date.now() / 1000),
-        updated_at: Math.floor(Date.now() / 1000),
+
       },
     });
   }
@@ -202,7 +212,7 @@ export abstract class BaseService<T> {
       where: { id },
       data: {
         [softDeleteField]: null,
-        updated_at: Math.floor(Date.now() / 1000),
+
       },
     });
   }

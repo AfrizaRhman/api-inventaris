@@ -8,7 +8,7 @@ export class CategoryService {
 
   // Create
   async create(data: CreateCategoryDto, userId: string) {
-    return this.prisma.categories.create({
+    return this.prisma.category.create({
       data: {
         ...data,
         created_by: userId,
@@ -25,14 +25,14 @@ export class CategoryService {
 
   // Detail
   async findOne(id: string) {
-    return this.prisma.categories.findUnique({
+    return this.prisma.category.findUnique({
       where: { id },
     });
   }
 
   // Update
   async update(id: string, data: UpdateCategoryDto, userId: string) {
-    return this.prisma.categories.update({
+    return this.prisma.category.update({
       where: { id },
       data: {
         ...data,
@@ -44,7 +44,7 @@ export class CategoryService {
 
   // Soft delete (thanks to prisma-extension-soft-delete)
   async remove(id: string, userId: string) {
-  return this.prisma.categories.delete({
+  return this.prisma.category.delete({
     where: { id },
     data: {
       deleted_by: userId,

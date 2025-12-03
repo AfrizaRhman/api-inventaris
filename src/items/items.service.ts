@@ -24,15 +24,16 @@ export class ItemsService extends BaseService<any> {
   }
 
   protected getQueryOptions(): QueryBuilderOptions {
-    return {
-      defaultSortField: 'createdAt',
-      defaultSortDirection: SortDirection.DESC,
-      allowedSortFields: ['id', 'name', 'price', 'stock', 'createdAt', 'updatedAt'],
-      allowedFilterFields: ['id', 'name', 'price', 'stock', 'category_id', 'unit_id'],
-      defaultSearchFields: ['name', 'supplier', 'code'],
-      softDeleteField: 'deleted_at',
-    };
-  }
+  return {
+    defaultSortField: 'created_at', // FIX
+    defaultSortDirection: SortDirection.DESC,
+    allowedSortFields: ['id', 'name', 'price', 'stock', 'created_at', 'updated_at'], // FIX
+    allowedFilterFields: ['id', 'name', 'price', 'stock', 'category_id', 'unit_id'],
+    defaultSearchFields: ['name', 'supplier', 'code'],
+    softDeleteField: 'deleted_at',
+  };
+}
+
 
   private readonly itemInclude = {
     unit: true,
