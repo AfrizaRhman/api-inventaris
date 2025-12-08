@@ -4,6 +4,7 @@ import { BaseService } from '../common/services/base.service';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { CreateUnitDto } from './dto/create-unit.dto';
 import { UpdateUnitDto } from './dto/update-unit.dto';
+import { SortDirection, QueryBuilderOptions } from '../common/dto/pagination.dto';
 
 @Injectable()
 export class UnitService extends BaseService<any> {
@@ -11,19 +12,31 @@ export class UnitService extends BaseService<any> {
     super(prismaService);
   }
 
+  /**
+   * Model yang digunakan service ini
+   */
   protected getModel() {
     return this.prismaService.db.unit;
   }
 
-  protected getQueryOptions() {
-  return {
-    softDeleteField: 'deleted_at',
-  };
-}
+  /**
+   * Opsi Query Builder agar cocok dengan BaseService
+   */
+  protected getQueryOptions(): QueryBuilderOptions {
+    return {
+      softDeleteField: 'deleted_at',
+      defaultSortField: 'created_at',
+      defaultSortDirection: SortDirection.DESC, // ✔ gunakan enum, bukan string
+      allowedSortFields: ['name', 'created_at', 'updated_at'],
+      allowedFilterFields: ['name'],
+      defaultSearchFields: ['name'],
+      defaultInclude: {},
+    };
+  }
 
-
-  /* ================= CREATE ================= */
-
+  /**
+   * CREATE Unit
+   */
   async createUnit(dto: CreateUnitDto) {
     return this.create({
       name: dto.name,
@@ -31,17 +44,27 @@ export class UnitService extends BaseService<any> {
     });
   }
 
-  /* ================= READ ================= */
-
+  /**
+   * GET Units (pagination + filtering)
+   */
   async getUnits(query: any) {
-    const deleted = query.deleted === 'true';
+    const pagination = new PaginationDto();
 
-    return this.findAllPaginated(new PaginationDto(), {
-      deleted_at: deleted ? { not: null } : null,
-    });
+    pagination.page = query.page ? Number(query.page) : 1;
+    pagination.limit = query.limit ? Number(query.limit) : 10;
+    pagination.search = query.search || undefined;
+
+    const where =
+      query.deleted === 'true'
+        ? { deleted_at: { not: null } }
+        : { deleted_at: null };
+
+    return this.findAllPaginated(pagination, where);
   }
 
-  // ✅ hanya ambil ACTIVE
+  /**
+   * Find by ID (tidak termasuk soft deleted)
+   */
   async findUnitById(id: string) {
     const unit = await this.findById(id);
 
@@ -52,11 +75,11 @@ export class UnitService extends BaseService<any> {
     return unit;
   }
 
-  // ✅ ambil termasuk soft-deleted
+  /**
+   * Find by ID termasuk yang deleted
+   */
   async findUnitIncludingDeleted(id: string) {
-    const unit = await this.getModel().findUnique({
-      where: { id },
-    });
+    const unit = await this.getModel().findUnique({ where: { id } });
 
     if (!unit) {
       throw new NotFoundException(`Unit with ID ${id} not found.`);
@@ -65,44 +88,47 @@ export class UnitService extends BaseService<any> {
     return unit;
   }
 
-  /* ================= SOFT DELETE ================= */
-
+  /**
+   * Soft Delete
+   */
   async softDeleteUnit(id: string) {
-  // allow using includeDeleted true to check existence; BaseService.softDelete will validate and set Date
-  return this.softDelete(id);
-}
+    return this.softDelete(id);
+  }
 
-
-
-
-  /* ================= RESTORE ================= */
-
+  /**
+   * Restore Soft Deleted
+   */
   async restoreUnit(id: string) {
-  // includeDeleted = true
-  const unit = await this.findById(id, undefined, true);
+    const unit = await this.getModel().findUnique({ where: { id } });
 
-  if (!unit) {
-    throw new NotFoundException(`Unit with ID ${id} not found.`);
+    if (!unit) {
+      throw new NotFoundException(`Unit with ID ${id} not found.`);
+    }
+
+    if (unit.deleted_at === null) {
+      throw new NotFoundException(`Unit with ID ${id} is not deleted.`);
+    }
+
+    return this.restore(id);
   }
 
-  if (unit.deleted_at === null) {
-    throw new NotFoundException(`Unit with ID ${id} is not deleted.`);
-  }
-
-  return this.restore(id); // calls BaseService.restore which now checks then update by id
-}
-
-
-
-
-
-  /* ================= HARD DELETE ================= */
-
+  /**
+   * Permanent Delete
+   */
   async deleteUnitPermanently(id: string) {
     await this.findUnitIncludingDeleted(id);
 
-    return this.getModel().delete({
+    return await this.getModel().delete({
       where: { id },
+    });
+  }
+
+  /**
+   * UPDATE
+   */
+  async updateUnit(id: string, dto: UpdateUnitDto) {
+    return this.update(id, {
+      name: dto.name,
     });
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Req } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 
@@ -8,8 +8,7 @@ export class CategoryController {
 
   @Post()
   create(@Body() dto: CreateCategoryDto, @Req() req) {
-    const userId = req.user?.id || null; // ambil user id dari auth
-    return this.categoryService.create(dto, userId);
+    return this.categoryService.create(dto, req.user?.id);
   }
 
   @Get()
@@ -22,15 +21,18 @@ export class CategoryController {
     return this.categoryService.findOne(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   update(@Param('id') id: string, @Body() dto: UpdateCategoryDto, @Req() req) {
-    const userId = req.user?.id || null;
-    return this.categoryService.update(id, dto, userId);
+    return this.categoryService.update(id, dto, req.user?.id);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string, @Req() req) {
-    const userId = req.user?.id || null;
-    return this.categoryService.remove(id, userId);
+    return this.categoryService.remove(id, req.user?.id);
+  }
+
+  @Put(':id/restore')
+  restore(@Param('id') id: string, @Req() req) {
+    return this.categoryService.restore(id, req.user?.id);
   }
 }

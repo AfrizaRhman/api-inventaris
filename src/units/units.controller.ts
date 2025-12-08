@@ -36,7 +36,7 @@ export class UnitController {
 
   @Put(':id')
   update(@Param('id') id: string, @Body() dto: UpdateUnitDto) {
-    return this.unitService.update(id, dto);
+    return this.unitService.updateUnit(id, dto);
   }
 
   @Delete(':id')
@@ -45,9 +45,9 @@ export class UnitController {
   }
 
   @Put(':id/restore')
-restore(@Param('id') id: string) {
-  return this.unitService.restoreUnit(id);
-}
+  restore(@Param('id') id: string) {
+    return this.unitService.restoreUnit(id);
+  }
 
   @Delete(':id/permanent')
   hardDelete(@Param('id') id: string) {
