@@ -9,6 +9,7 @@ import {
   Query,
   ValidationPipe,
   UsePipes,
+  NotFoundException,
 } from '@nestjs/common';
 import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/create-item.dto';
@@ -40,8 +41,20 @@ export class ItemsController {
     return this.itemsService.updateItem(id, dto);
   }
 
+  // Soft Delete
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.itemsService.softDeleteItem(id);
+  async remove(@Param('id') id: string) {
+    const item = await this.itemsService.softDeleteItem(id);
+    return {
+      message: item.deleted_at ? 'Item deleted successfully' : 'Item was already deleted',
+      item,
+    };
+  }
+
+  // Hard Delete
+  @Delete('hard/:id')
+  async removeHard(@Param('id') id: string) {
+    const item = await this.itemsService.deleteItemPermanently(id);
+    return { message: 'Item permanently deleted', item };
   }
 }

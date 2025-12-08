@@ -10,7 +10,7 @@ datasource db {
 model Unit {
   id         String   @id @default(uuid())
   name       String
-   deleted_at DateTime?
+  deleted_at DateTime?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -42,7 +42,7 @@ model Warehouse {
   created_by String?
   updated_by String?
 
-   deleted_at DateTime?
+  deleted_at DateTime?
 
   sku Sku[]
 }

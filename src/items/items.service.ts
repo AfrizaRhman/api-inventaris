@@ -24,16 +24,15 @@ export class ItemsService extends BaseService<any> {
   }
 
   protected getQueryOptions(): QueryBuilderOptions {
-  return {
-    defaultSortField: 'created_at', // FIX
-    defaultSortDirection: SortDirection.DESC,
-    allowedSortFields: ['id', 'name', 'price', 'stock', 'created_at', 'updated_at'], // FIX
-    allowedFilterFields: ['id', 'name', 'price', 'stock', 'category_id', 'unit_id'],
-    defaultSearchFields: ['name', 'supplier', 'code'],
-    softDeleteField: 'deleted_at',
-  };
-}
-
+    return {
+      defaultSortField: 'created_at',
+      defaultSortDirection: SortDirection.DESC,
+      allowedSortFields: ['id', 'name', 'price', 'stock', 'created_at', 'updated_at'],
+      allowedFilterFields: ['id', 'name', 'price', 'stock', 'category_id', 'unit_id'],
+      defaultSearchFields: ['name', 'supplier', 'code'],
+      softDeleteField: 'deleted_at',
+    };
+  }
 
   private readonly itemInclude = {
     unit: true,
@@ -42,11 +41,9 @@ export class ItemsService extends BaseService<any> {
 
   private async ensureExists(model: 'unit' | 'categories', id?: string) {
     if (!id) return;
-
     const record = await (this.prismaService.db as any)[model].findUnique({
       where: { id },
     });
-
     if (!record) {
       throw new BadRequestException(`${model} with ID '${id}' does not exist.`);
     }
@@ -68,10 +65,10 @@ export class ItemsService extends BaseService<any> {
         image: dto.image ?? null,
         unit_id: dto.unit_id,
         category_id: dto.category_id,
-        created_at: new Date(),   // ✅ tambahkan ini
+        created_at: new Date(),
       },
       this.itemInclude
-    );    
+    );
   }
 
   // PAGINATION
@@ -85,17 +82,17 @@ export class ItemsService extends BaseService<any> {
 
   // FIND ONE
   async findItemById(id: string) {
-    const item = await this.findById(id, this.itemInclude);
-
-    if (!item) throw new NotFoundException(`Item with ID ${id} not found`);
-
+    const item = await this.prismaService.db.item.findUnique({
+      where: { id },
+      include: this.itemInclude,
+    });
+    if (!item) throw new NotFoundException(`Item with ID '${id}' not found`);
     return item;
   }
 
   // UPDATE
   async updateItem(id: string, dto: UpdateItemDto) {
-    await this.findItemById(id);
-
+    const item = await this.findItemById(id);
     if (dto.unit_id) await this.ensureExists('unit', dto.unit_id);
     if (dto.category_id) await this.ensureExists('categories', dto.category_id);
 
@@ -116,15 +113,27 @@ export class ItemsService extends BaseService<any> {
     );
   }
 
-  // SOFT DELETE
+  // SOFT DELETE (idempotent)
   async softDeleteItem(id: string) {
-    return this.update(id, {
-      deleted_at: Math.floor(Date.now() / 1000),
-    });
+    const item = await this.prismaService.db.item.findUnique({ where: { id } });
+    if (!item) throw new NotFoundException(`Item with ID '${id}' not found`);
+
+    // Jika sudah dihapus, kembalikan item apa adanya
+    if (item.deleted_at) return item;
+
+    // Lakukan soft delete
+    return await this.update(
+      id,
+      { deleted_at: new Date() },
+      this.itemInclude
+    );
   }
 
   // HARD DELETE
   async deleteItemPermanently(id: string) {
+    const item = await this.prismaService.db.item.findUnique({ where: { id } });
+    if (!item) throw new NotFoundException(`Item with ID '${id}' not found`);
+
     return this.permanentDelete(id);
   }
 }
