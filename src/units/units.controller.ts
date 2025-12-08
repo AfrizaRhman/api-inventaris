@@ -13,7 +13,6 @@ import {
 import { UnitService } from './units.service';
 import { CreateUnitDto } from './dto/create-unit.dto';
 import { UpdateUnitDto } from './dto/update-unit.dto';
-import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('units')
 export class UnitController {
@@ -26,8 +25,8 @@ export class UnitController {
   }
 
   @Get()
-  findAll(@Query() pagination: PaginationDto) {
-    return this.unitService.findAllUnitsPaginated(pagination);
+  findAll(@Query() query: any) {
+    return this.unitService.getUnits(query);
   }
 
   @Get(':id')
@@ -37,12 +36,21 @@ export class UnitController {
 
   @Put(':id')
   update(@Param('id') id: string, @Body() dto: UpdateUnitDto) {
-    return this.unitService.updateUnit(id, dto);
+    return this.unitService.update(id, dto);
   }
 
-  // Soft delete
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.unitService.softDeleteUnit(id);
+  }
+
+  @Put(':id/restore')
+restore(@Param('id') id: string) {
+  return this.unitService.restoreUnit(id);
+}
+
+  @Delete(':id/permanent')
+  hardDelete(@Param('id') id: string) {
+    return this.unitService.deleteUnitPermanently(id);
   }
 }

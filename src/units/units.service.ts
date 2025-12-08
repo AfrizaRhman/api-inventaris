@@ -1,15 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { BaseService } from '../common/services/base.service';
-import {
-  QueryBuilderOptions,
-  SortDirection,
-  PaginationDto,
-} from '../common/dto/pagination.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 import { CreateUnitDto } from './dto/create-unit.dto';
 import { UpdateUnitDto } from './dto/update-unit.dto';
 
@@ -23,77 +15,94 @@ export class UnitService extends BaseService<any> {
     return this.prismaService.db.unit;
   }
 
-  protected getQueryOptions(): QueryBuilderOptions {
-    return {
-      defaultSortField: 'createdAt',
-      defaultSortDirection: SortDirection.DESC,
-      allowedSortFields: ['id', 'name', 'createdAt', 'updatedAt'],
-      allowedFilterFields: ['id', 'name'],
-      defaultSearchFields: ['name'],
-      softDeleteField: 'deleted_at',
-    };
-  }
+  protected getQueryOptions() {
+  return {
+    softDeleteField: 'deleted_at',
+  };
+}
 
-  // ===============================
-  // CREATE
-  // ===============================
+
+  /* ================= CREATE ================= */
+
   async createUnit(dto: CreateUnitDto) {
     return this.create({
       name: dto.name,
-    });
-  }
-
-  // ===============================
-  // GET LIST (Exclude Deleted)
-  // ===============================
-  async findAllUnitsPaginated(paginationDto: PaginationDto, where = {}) {
-    return this.findAllPaginated(paginationDto, {
-      ...where,
       deleted_at: null,
     });
   }
 
-  // ===============================
-  // GET BY ID (Exclude Deleted)
-  // ===============================
+  /* ================= READ ================= */
+
+  async getUnits(query: any) {
+    const deleted = query.deleted === 'true';
+
+    return this.findAllPaginated(new PaginationDto(), {
+      deleted_at: deleted ? { not: null } : null,
+    });
+  }
+
+  // ✅ hanya ambil ACTIVE
   async findUnitById(id: string) {
     const unit = await this.findById(id);
 
-    // Perbaikan: cek apakah unit sudah di-soft-delete
-    if (!unit || unit.deleted_at !== null) {
-      throw new NotFoundException(`Unit with ID ${id} not found`);
+    if (!unit) {
+      throw new NotFoundException(`Unit with ID ${id} not found.`);
     }
 
     return unit;
   }
 
-  // ===============================
-  // UPDATE UNIT
-  // ===============================
-  async updateUnit(id: string, dto: UpdateUnitDto) {
-    await this.findUnitById(id); // pastikan tidak update data yang sudah soft delete
-
-    return this.update(id, {
-      name: dto.name,
+  // ✅ ambil termasuk soft-deleted
+  async findUnitIncludingDeleted(id: string) {
+    const unit = await this.getModel().findUnique({
+      where: { id },
     });
+
+    if (!unit) {
+      throw new NotFoundException(`Unit with ID ${id} not found.`);
+    }
+
+    return unit;
   }
 
-  // ===============================
-  // SOFT DELETE (Perbaikan)
-  // ===============================
+  /* ================= SOFT DELETE ================= */
+
   async softDeleteUnit(id: string) {
-    // Pastikan tidak menghapus data yang sudah soft-delete
-    await this.findUnitById(id);
+  // allow using includeDeleted true to check existence; BaseService.softDelete will validate and set Date
+  return this.softDelete(id);
+}
 
-    return this.update(id, {
-      deleted_at: new Date(),
-    });
+
+
+
+  /* ================= RESTORE ================= */
+
+  async restoreUnit(id: string) {
+  // includeDeleted = true
+  const unit = await this.findById(id, undefined, true);
+
+  if (!unit) {
+    throw new NotFoundException(`Unit with ID ${id} not found.`);
   }
 
-  // ===============================
-  // HARD DELETE (Opsional)
-  // ===============================
+  if (unit.deleted_at === null) {
+    throw new NotFoundException(`Unit with ID ${id} is not deleted.`);
+  }
+
+  return this.restore(id); // calls BaseService.restore which now checks then update by id
+}
+
+
+
+
+
+  /* ================= HARD DELETE ================= */
+
   async deleteUnitPermanently(id: string) {
-    return this.permanentDelete(id);
+    await this.findUnitIncludingDeleted(id);
+
+    return this.getModel().delete({
+      where: { id },
+    });
   }
 }

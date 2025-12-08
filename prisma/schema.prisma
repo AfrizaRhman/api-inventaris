@@ -76,9 +76,9 @@ model Sku {
   status       String?
   warehouse_id String?
 
-  created_at Int? // optional, if you want timestamps
-  updated_at Int?
-   deleted_at DateTime?
+   created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  deleted_at DateTime?
 
   // relations
   item               Item                 @relation(fields: [item_id], references: [id])
@@ -99,12 +99,12 @@ model User {
   status     String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  deleted_at DateTime?
 
   // Relasi ke Odtw
   odtw_id String?
   odtw    Odtw?   @relation("OdtwUsers", fields: [odtw_id], references: [id])
 
-   deleted_at DateTime?
 }
 
 model Odtw {
@@ -115,7 +115,7 @@ model Odtw {
   users User[] @relation("OdtwUsers")
 
   // Soft delete, dipakai oleh prisma-extension-soft-delete
-  deleted_at Int?
+  deleted_at DateTime?
 }
 
 model Loans {
@@ -142,7 +142,7 @@ model LoanDetail {
   qty         Int
   return_date DateTime?
   status      String
-  deleted_at  Int?
+  deleted_at  DateTime?
 
   loan Loans @relation(fields: [loan_id], references: [id], onDelete: Cascade)
   sku  Sku   @relation(fields: [sku_id], references: [id])

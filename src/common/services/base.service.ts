@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
-import { Injectable } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   PaginationDto,
@@ -13,25 +13,12 @@ import {
 } from '../dto/pagination.dto';
 import { QueryBuilderService } from './query-builder.service';
 
-@Injectable()
 export abstract class BaseService<T> {
   constructor(protected prismaService: PrismaService) { }
 
-  /**
-   * Abstract method to get the Prisma model delegate
-   * Each extending service must implement this
-   */
   protected abstract getModel(): any;
-
-  /**
-   * Abstract method to get query builder options
-   * Each extending service can customize the options
-   */
   protected abstract getQueryOptions(): QueryBuilderOptions;
 
-  /**
-   * Find all records with pagination, search, and filtering
-   */
   async findAllPaginated(
     paginationDto: PaginationDto,
     additionalWhere: Record<string, any> = {},
@@ -52,30 +39,18 @@ export abstract class BaseService<T> {
       paginationDto,
       options,
       additionalWhere,
-      select, // Pass select as parameter
+      select,
     );
 
-    // Get total count
     const total = await model.count({ where });
-
-    // Determine which select to use - priority: parameter select > built select from options
     const finalSelect = select || builtSelect;
 
-    // Prisma doesn't allow both select and include at the same time
-    // If both are provided, select takes priority
-    const queryOptions: any = {
-      skip,
-      take,
-      where,
-      orderBy,
-    };
+    const queryOptions: any = { skip, take, where, orderBy };
 
-    // === AUTO FIX ORDER BY === //
-if (queryOptions.orderBy && queryOptions.orderBy.createdAt) {
-  // jika model tidak punya createdAt, ganti ke created_at
-  queryOptions.orderBy = { created_at: queryOptions.orderBy.createdAt };
-}
-  
+    // fix orderBy field naming if needed
+    if (queryOptions.orderBy && queryOptions.orderBy.createdAt) {
+      queryOptions.orderBy = { created_at: queryOptions.orderBy.createdAt };
+    }
 
     if (finalSelect && Object.keys(finalSelect).length > 0) {
       queryOptions.select = finalSelect;
@@ -83,7 +58,6 @@ if (queryOptions.orderBy && queryOptions.orderBy.createdAt) {
       queryOptions.include = include;
     }
 
-    // Get paginated data
     const data = await model.findMany(queryOptions);
 
     return QueryBuilderService.formatPaginatedResponse(
@@ -94,9 +68,6 @@ if (queryOptions.orderBy && queryOptions.orderBy.createdAt) {
     );
   }
 
-  /**
-   * Find all records (non-paginated)
-   */
   async findAll(args: any = {}, includeDeleted = false): Promise<T[]> {
     const model = this.getModel();
     const options = this.getQueryOptions();
@@ -113,9 +84,7 @@ if (queryOptions.orderBy && queryOptions.orderBy.createdAt) {
     });
   }
 
-  /**
-   * Find a record by ID
-   */
+  // NOTE: use findFirst because where may include soft-delete filter
   async findById(
     id: string,
     select?: Record<string, any>,
@@ -125,20 +94,17 @@ if (queryOptions.orderBy && queryOptions.orderBy.createdAt) {
     const options = this.getQueryOptions();
     const { softDeleteField = 'deleted_at' } = options;
 
-    const where = {
+    const where: any = {
       id,
       ...(includeDeleted ? {} : { [softDeleteField]: null }),
     };
 
-    return await model.findUnique({
+    return await model.findFirst({
       where,
       ...(select && { select }),
     });
   }
 
-  /**
-   * Create a new record
-   */
   async create(
     data: any,
     include?: Record<string, any>,
@@ -151,9 +117,7 @@ if (queryOptions.orderBy && queryOptions.orderBy.createdAt) {
     });
   }
 
-  /**
-   * Update a record by ID
-   */
+  // Update: ensure record exists first (respecting soft-delete)
   async update(
     id: string,
     data: any,
@@ -163,83 +127,95 @@ if (queryOptions.orderBy && queryOptions.orderBy.createdAt) {
     const options = this.getQueryOptions();
     const { softDeleteField = 'deleted_at' } = options;
 
-    const where = {
-      id,
-      [softDeleteField]: null,
-    };
+    // ensure the record exists and is not soft-deleted
+    const found = await model.findFirst({
+      where: {
+        id,
+        [softDeleteField]: null,
+      },
+    });
+
+    if (!found) {
+      throw new NotFoundException(`Record with ID ${id} not found.`);
+    }
 
     return await model.update({
-      where,
-      data: {
-        ...data,
-
-      },
+      where: { id },
+      data: { ...data },
       ...(select && { select }),
     });
   }
 
-  /**
-   * Soft delete a record by ID
-   */
+  // Soft delete: ensure record exists and not already deleted, then update by id
   async softDelete(id: string): Promise<T> {
     const model = this.getModel();
     const options = this.getQueryOptions();
     const { softDeleteField = 'deleted_at' } = options;
 
-    const where = {
-      id,
-      [softDeleteField]: null,
-    };
+    const found = await model.findFirst({
+      where: {
+        id,
+        [softDeleteField]: null,
+      },
+    });
+
+    if (!found) {
+      throw new NotFoundException(`Record with ID ${id} not found or already deleted.`);
+    }
 
     return await model.update({
-      where,
+      where: { id },
       data: {
-        [softDeleteField]: Math.floor(Date.now() / 1000),
-
+        [softDeleteField]: new Date(),
       },
     });
   }
 
-  /**
-   * Restore a soft deleted record
-   */
+  // Restore: ensure record exists (including deleted), then update by id
   async restore(id: string): Promise<T> {
     const model = this.getModel();
     const options = this.getQueryOptions();
     const { softDeleteField = 'deleted_at' } = options;
 
+    const found = await model.findFirst({
+      where: { id },
+    });
+
+    if (!found) {
+      throw new NotFoundException(`Record with ID ${id} not found.`);
+    }
+
+    if (found[softDeleteField] === null) {
+      throw new NotFoundException(`Record with ID ${id} is not deleted.`);
+    }
+
     return await model.update({
       where: { id },
       data: {
         [softDeleteField]: null,
-
       },
     });
   }
 
-  /**
-   * Permanently delete a record (hard delete)
-   */
   async permanentDelete(id: string): Promise<T> {
     const model = this.getModel();
+
+    // ensure it exists first
+    const found = await model.findFirst({ where: { id } });
+    if (!found) {
+      throw new NotFoundException(`Record with ID ${id} not found.`);
+    }
 
     return await model.delete({
       where: { id },
     });
   }
 
-  /**
-   * Find all records including soft deleted ones
-   */
   async findAllWithDeleted(args: any = {}): Promise<T[]> {
     const model = this.getModel();
-
     return await model.findMany(args);
   }
 
-  /**
-   * Find only soft deleted records
-   */
   async findDeleted(args: any = {}): Promise<T[]> {
     const model = this.getModel();
     const options = this.getQueryOptions();
@@ -256,9 +232,6 @@ if (queryOptions.orderBy && queryOptions.orderBy.createdAt) {
     });
   }
 
-  /**
-   * Get soft delete statistics
-   */
   async getSoftDeleteStats(): Promise<{
     total: number;
     active: number;
