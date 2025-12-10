@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 
@@ -6,9 +6,9 @@ import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 export class CategoryService {
   constructor(private prisma: PrismaService) {}
 
-  // Create
+  // CREATE
   async create(data: CreateCategoryDto, userId: string) {
-    return this.prisma.db.categories.create({
+    return this.prisma.category.create({
       data: {
         ...data,
         created_by: userId,
@@ -16,74 +16,58 @@ export class CategoryService {
     });
   }
 
-  // List (filter agar tidak mengambil yang deleted)
+  // LIST – Only Active (not soft deleted)
   async findAll() {
-    return this.prisma.db.categories.findMany({
-      where: {
-        deleted_at: null, // hanya yang tidak terhapus
-      },
+    return this.prisma.category.findMany({
+      where: { deleted_at: null },
       orderBy: { created_at: 'desc' },
     });
   }
 
-  // Detail
-  async findOne(id: string) {
-    const category = await this.prisma.db.categories.findFirst({
-      where: {
-        id,
-        deleted_at: null, // tidak fetch yang terhapus
-      },
+  // LIST ALL including soft deleted (for admin restore view)
+  async findAllWithDeleted() {
+    return this.prisma.category.findMany({
+      orderBy: { created_at: 'desc' },
     });
-
-    if (!category) throw new NotFoundException('Category not found');
-    return category;
   }
 
-  // Update
+  // DETAIL
+  async findOne(id: string) {
+    return this.prisma.category.findUnique({ where: { id } });
+  }
+
+  // UPDATE
   async update(id: string, data: UpdateCategoryDto, userId: string) {
-    return this.prisma.db.categories.update({
+    return this.prisma.category.update({
       where: { id },
       data: {
         ...data,
         updated_by: userId,
+        updated_at: new Date(),
       },
     });
   }
 
-  // Soft Delete
+  // SOFT DELETE
   async remove(id: string, userId: string) {
-    // pastikan data ada & belum terhapus
-    const check = await this.prisma.db.categories.findFirst({
-      where: { id, deleted_at: null },
-    });
-
-    if (!check) throw new NotFoundException('Category not found or already deleted');
-
-    return this.prisma.db.categories.update({
+    return this.prisma.category.update({
       where: { id },
       data: {
         deleted_at: new Date(),
         deleted_by: userId,
-        status: 'inactive',
       },
     });
   }
 
-  // Restore
+  // RESTORE
   async restore(id: string, userId: string) {
-    const check = await this.prisma.db.categories.findFirst({
-      where: { id, deleted_at: { not: null } },
-    });
-
-    if (!check) throw new NotFoundException('Category not deleted');
-
-    return this.prisma.db.categories.update({
+    return this.prisma.category.update({
       where: { id },
       data: {
         deleted_at: null,
         deleted_by: null,
-        status: 'active',
         updated_by: userId,
+        updated_at: new Date(),
       },
     });
   }
