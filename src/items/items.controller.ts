@@ -3,13 +3,13 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Param,
   Body,
   Query,
   ValidationPipe,
   UsePipes,
-  NotFoundException,
 } from '@nestjs/common';
 import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/create-item.dto';
@@ -41,20 +41,21 @@ export class ItemsController {
     return this.itemsService.updateItem(id, dto);
   }
 
-  // Soft Delete
-  @Delete(':id')
+  // SOFT DELETE
+  @Patch(':id')
   async remove(@Param('id') id: string) {
     const item = await this.itemsService.softDeleteItem(id);
     return {
-      message: item.deleted_at ? 'Item deleted successfully' : 'Item was already deleted',
+      message: item.deleted_at
+        ? 'Item soft-deleted successfully'
+        : 'Item already soft-deleted',
       item,
     };
   }
 
-  // Hard Delete
-  @Delete('hard/:id')
-  async removeHard(@Param('id') id: string) {
-    const item = await this.itemsService.deleteItemPermanently(id);
-    return { message: 'Item permanently deleted', item };
+  // HARD DELETE (permanent)
+  @Delete(':id/permanent')
+  hardDelete(@Param('id') id: string) {
+    return this.itemsService.deleteItemPermanently(id);
   }
 }

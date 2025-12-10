@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   PaginationDto,
@@ -14,10 +14,14 @@ import {
 import { QueryBuilderService } from './query-builder.service';
 
 export abstract class BaseService<T> {
-  constructor(protected prismaService: PrismaService) { }
+  constructor(protected prismaService: PrismaService) {}
 
   protected abstract getModel(): any;
   protected abstract getQueryOptions(): QueryBuilderOptions;
+
+  /* ============================================================
+     PAGINATION
+  ============================================================ */
 
   async findAllPaginated(
     paginationDto: PaginationDto,
@@ -47,7 +51,6 @@ export abstract class BaseService<T> {
 
     const queryOptions: any = { skip, take, where, orderBy };
 
-    // fix orderBy field naming if needed
     if (queryOptions.orderBy && queryOptions.orderBy.createdAt) {
       queryOptions.orderBy = { created_at: queryOptions.orderBy.createdAt };
     }
@@ -68,35 +71,35 @@ export abstract class BaseService<T> {
     );
   }
 
+  /* ============================================================
+     FINDERS
+  ============================================================ */
+
   async findAll(args: any = {}, includeDeleted = false): Promise<T[]> {
     const model = this.getModel();
-    const options = this.getQueryOptions();
-    const { softDeleteField = 'deleted_at' } = options;
+    const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
+    const field = softDeleteField as string;
 
     const where = {
       ...args.where,
-      ...(includeDeleted ? {} : { [softDeleteField]: null }),
+      ...(includeDeleted ? {} : { [field]: null }),
     };
 
-    return await model.findMany({
-      ...args,
-      where,
-    });
+    return await model.findMany({ ...args, where });
   }
 
-  // NOTE: use findFirst because where may include soft-delete filter
   async findById(
     id: string,
     select?: Record<string, any>,
     includeDeleted = false,
   ): Promise<T | null> {
     const model = this.getModel();
-    const options = this.getQueryOptions();
-    const { softDeleteField = 'deleted_at' } = options;
+    const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
+    const field = softDeleteField as string;
 
     const where: any = {
       id,
-      ...(includeDeleted ? {} : { [softDeleteField]: null }),
+      ...(includeDeleted ? {} : { [field]: null }),
     };
 
     return await model.findFirst({
@@ -105,10 +108,22 @@ export abstract class BaseService<T> {
     });
   }
 
-  async create(
-    data: any,
-    include?: Record<string, any>,
-  ): Promise<T> {
+  async findIncludingDeleted(id: string): Promise<T> {
+    const model = this.getModel();
+
+    const found = await model.findUnique({ where: { id } });
+    if (!found) {
+      throw new NotFoundException(`Record with ID ${id} not found.`);
+    }
+
+    return found;
+  }
+
+  /* ============================================================
+     CREATE / UPDATE
+  ============================================================ */
+
+  async create(data: any, include?: Record<string, any>): Promise<T> {
     const model = this.getModel();
 
     return await model.create({
@@ -117,22 +132,13 @@ export abstract class BaseService<T> {
     });
   }
 
-  // Update: ensure record exists first (respecting soft-delete)
-  async update(
-    id: string,
-    data: any,
-    select?: Record<string, any>,
-  ): Promise<T> {
+  async update(id: string, data: any, select?: Record<string, any>): Promise<T> {
     const model = this.getModel();
-    const options = this.getQueryOptions();
-    const { softDeleteField = 'deleted_at' } = options;
+    const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
+    const field = softDeleteField as string;
 
-    // ensure the record exists and is not soft-deleted
     const found = await model.findFirst({
-      where: {
-        id,
-        [softDeleteField]: null,
-      },
+      where: { id, [field]: null },
     });
 
     if (!found) {
@@ -141,75 +147,79 @@ export abstract class BaseService<T> {
 
     return await model.update({
       where: { id },
-      data: { ...data },
+      data,
       ...(select && { select }),
     });
   }
 
-  // Soft delete: ensure record exists and not already deleted, then update by id
+  /* ============================================================
+     SOFT DELETE
+  ============================================================ */
+
   async softDelete(id: string): Promise<T> {
     const model = this.getModel();
-    const options = this.getQueryOptions();
-    const { softDeleteField = 'deleted_at' } = options;
+    const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
+    const field = softDeleteField as string;
 
     const found = await model.findFirst({
-      where: {
-        id,
-        [softDeleteField]: null,
-      },
+      where: { id, [field]: null },
     });
 
     if (!found) {
-      throw new NotFoundException(`Record with ID ${id} not found or already deleted.`);
+      throw new NotFoundException(
+        `Record with ID ${id} not found or already deleted.`,
+      );
     }
 
-    return await model.update({
+    return model.update({
       where: { id },
-      data: {
-        [softDeleteField]: new Date(),
-      },
+      data: { [field]: new Date() },
     });
   }
 
-  // Restore: ensure record exists (including deleted), then update by id
+  /* ============================================================
+     RESTORE
+  ============================================================ */
+
   async restore(id: string): Promise<T> {
     const model = this.getModel();
-    const options = this.getQueryOptions();
-    const { softDeleteField = 'deleted_at' } = options;
+    const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
+    const field = softDeleteField as string;
 
     const found = await model.findFirst({
-      where: { id },
+      where: { id, [field]: { not: null } },
     });
 
     if (!found) {
-      throw new NotFoundException(`Record with ID ${id} not found.`);
+      throw new NotFoundException(
+        `Record with ID ${id} not found or not deleted.`,
+      );
     }
 
-    if (found[softDeleteField] === null) {
-      throw new NotFoundException(`Record with ID ${id} is not deleted.`);
-    }
-
-    return await model.update({
+    return model.update({
       where: { id },
-      data: {
-        [softDeleteField]: null,
-      },
+      data: { [field]: null },
     });
   }
 
-  async permanentDelete(id: string): Promise<T> {
+  /* ============================================================
+     HARD DELETE
+  ============================================================ */
+  async hardDelete(id: string): Promise<void> {
     const model = this.getModel();
 
-    // ensure it exists first
-    const found = await model.findFirst({ where: { id } });
+    const found = await model.findUnique({ where: { id } });
+
     if (!found) {
       throw new NotFoundException(`Record with ID ${id} not found.`);
     }
 
-    return await model.delete({
-      where: { id },
-    });
+    await model.delete({ where: { id } });
   }
+  
+  /* ============================================================
+     EXTRA HELPERS
+  ============================================================ */
 
   async findAllWithDeleted(args: any = {}): Promise<T[]> {
     const model = this.getModel();
@@ -218,18 +228,15 @@ export abstract class BaseService<T> {
 
   async findDeleted(args: any = {}): Promise<T[]> {
     const model = this.getModel();
-    const options = this.getQueryOptions();
-    const { softDeleteField = 'deleted_at' } = options;
+    const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
+    const field = softDeleteField as string;
 
     const where = {
       ...args.where,
-      [softDeleteField]: { not: null },
+      [field]: { not: null },
     };
 
-    return await model.findMany({
-      ...args,
-      where,
-    });
+    return await model.findMany({ ...args, where });
   }
 
   async getSoftDeleteStats(): Promise<{
@@ -238,12 +245,12 @@ export abstract class BaseService<T> {
     deleted: number;
   }> {
     const model = this.getModel();
-    const options = this.getQueryOptions();
-    const { softDeleteField = 'deleted_at' } = options;
+    const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
+    const field = softDeleteField as string;
 
     const [total, active] = await Promise.all([
       model.count(),
-      model.count({ where: { [softDeleteField]: null } }),
+      model.count({ where: { [field]: null } }),
     ]);
 
     return {

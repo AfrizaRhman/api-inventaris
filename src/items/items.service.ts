@@ -19,6 +19,10 @@ export class ItemsService extends BaseService<any> {
     super(prismaService);
   }
 
+  /* ============================================================
+     CONFIG
+  ============================================================ */
+
   protected getModel() {
     return this.prismaService.db.item;
   }
@@ -28,7 +32,14 @@ export class ItemsService extends BaseService<any> {
       defaultSortField: 'created_at',
       defaultSortDirection: SortDirection.DESC,
       allowedSortFields: ['id', 'name', 'price', 'stock', 'created_at', 'updated_at'],
-      allowedFilterFields: ['id', 'name', 'price', 'stock', 'category_id', 'unit_id'],
+      allowedFilterFields: [
+        'id',
+        'name',
+        'price',
+        'stock',
+        'category_id',
+        'unit_id',
+      ],
       defaultSearchFields: ['name', 'supplier', 'code'],
       softDeleteField: 'deleted_at',
     };
@@ -49,7 +60,10 @@ export class ItemsService extends BaseService<any> {
     }
   }
 
-  // CREATE
+  /* ============================================================
+     CREATE
+  ============================================================ */
+
   async createItem(dto: CreateItemDto) {
     await this.ensureExists('unit', dto.unit_id);
     await this.ensureExists('categories', dto.category_id);
@@ -67,32 +81,39 @@ export class ItemsService extends BaseService<any> {
         category_id: dto.category_id,
         created_at: new Date(),
       },
-      this.itemInclude
+      this.itemInclude,
     );
   }
 
-  // PAGINATION
+  /* ============================================================
+     PAGINATION
+  ============================================================ */
+
   async findAllItemsPaginated(paginationDto: PaginationDto, where = {}) {
     return this.findAllPaginated(
       paginationDto,
       { ...where, deleted_at: null },
-      this.itemInclude
+      this.itemInclude,
     );
   }
 
-  // FIND ONE
+  /* ============================================================
+     FIND ONE (pakai BaseService)
+  ============================================================ */
+
   async findItemById(id: string) {
-    const item = await this.prismaService.db.item.findUnique({
-      where: { id },
-      include: this.itemInclude,
-    });
+    const item = await this.findById(id, this.itemInclude);
     if (!item) throw new NotFoundException(`Item with ID '${id}' not found`);
     return item;
   }
 
-  // UPDATE
+  /* ============================================================
+     UPDATE (pakai BaseService)
+  ============================================================ */
+
   async updateItem(id: string, dto: UpdateItemDto) {
     const item = await this.findItemById(id);
+
     if (dto.unit_id) await this.ensureExists('unit', dto.unit_id);
     if (dto.category_id) await this.ensureExists('categories', dto.category_id);
 
@@ -109,31 +130,31 @@ export class ItemsService extends BaseService<any> {
         unit_id: dto.unit_id ?? undefined,
         category_id: dto.category_id ?? undefined,
       },
-      this.itemInclude
+      this.itemInclude,
     );
   }
 
-  // SOFT DELETE (idempotent)
+  /* ============================================================
+     SOFT DELETE (gunakan BaseService.softDelete)
+  ============================================================ */
+
   async softDeleteItem(id: string) {
-    const item = await this.prismaService.db.item.findUnique({ where: { id } });
-    if (!item) throw new NotFoundException(`Item with ID '${id}' not found`);
-
-    // Jika sudah dihapus, kembalikan item apa adanya
-    if (item.deleted_at) return item;
-
-    // Lakukan soft delete
-    return await this.update(
-      id,
-      { deleted_at: new Date() },
-      this.itemInclude
-    );
+    return this.softDelete(id);
   }
 
-  // HARD DELETE
-  async deleteItemPermanently(id: string) {
-    const item = await this.prismaService.db.item.findUnique({ where: { id } });
-    if (!item) throw new NotFoundException(`Item with ID '${id}' not found`);
+  /* ============================================================
+     RESTORE (gunakan BaseService.restore)
+  ============================================================ */
 
-    return this.permanentDelete(id);
+  async restoreItem(id: string) {
+    return this.restore(id);
+  }
+
+  /* ============================================================
+     HARD DELETE (gunakan BaseService.permanentDelete)
+  ============================================================ */
+
+  async deleteItemPermanently(id: string) {
+    return this.hardDelete(id);
   }
 }

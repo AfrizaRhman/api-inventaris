@@ -12,7 +12,7 @@ import { VisitorModule } from './visitor/visitor.module';
 import { ItemsModule } from './items/items.module';
 import { SkuModule } from './sku/sku.module';
 import { WarehouseModule } from './warehouse/warehouse.module';
-import { UnitModule } from './units/units.module';
+import { UnitsModule } from './units/units.module';
 import { CategoryModule } from './category/category.module';
 import { LoansModule } from './loans/loans.module';
 import { ItemMovementModule } from './item-movement/item-movement.module';
@@ -33,7 +33,7 @@ import { ItemMovementModule } from './item-movement/item-movement.module';
     ItemsModule, 
     SkuModule,
     WarehouseModule, // <--- WAJIB ADA
-    UnitModule,
+    UnitsModule,
     CategoryModule,
     LoansModule,
     ItemMovementModule,
