@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { BaseService } from '../common/services/base.service';
 import {
@@ -19,14 +15,12 @@ export class ItemsService extends BaseService<any> {
     super(prismaService);
   }
 
-  /* ============================================================
-     CONFIG
-  ============================================================ */
-
+  /** MODEL */
   protected getModel() {
     return this.prismaService.db.item;
   }
 
+  /** QUERY OPTIONS */
   protected getQueryOptions(): QueryBuilderOptions {
     return {
       defaultSortField: 'created_at',
@@ -45,11 +39,13 @@ export class ItemsService extends BaseService<any> {
     };
   }
 
+  /** INCLUDE DATA */
   private readonly itemInclude = {
     unit: true,
     category: true,
   };
 
+  /** VALIDASI UNIT & CATEGORY */
   private async ensureExists(model: 'unit' | 'categories', id?: string) {
     if (!id) return;
     const record = await (this.prismaService.db as any)[model].findUnique({
@@ -61,7 +57,7 @@ export class ItemsService extends BaseService<any> {
   }
 
   /* ============================================================
-     CREATE
+      CREATE
   ============================================================ */
 
   async createItem(dto: CreateItemDto) {
@@ -86,7 +82,7 @@ export class ItemsService extends BaseService<any> {
   }
 
   /* ============================================================
-     PAGINATION
+      PAGINATION
   ============================================================ */
 
   async findAllItemsPaginated(paginationDto: PaginationDto, where = {}) {
@@ -98,7 +94,7 @@ export class ItemsService extends BaseService<any> {
   }
 
   /* ============================================================
-     FIND ONE (pakai BaseService)
+      FIND ONE
   ============================================================ */
 
   async findItemById(id: string) {
@@ -108,11 +104,11 @@ export class ItemsService extends BaseService<any> {
   }
 
   /* ============================================================
-     UPDATE (pakai BaseService)
+      UPDATE
   ============================================================ */
 
   async updateItem(id: string, dto: UpdateItemDto) {
-    const item = await this.findItemById(id);
+    await this.findItemById(id);
 
     if (dto.unit_id) await this.ensureExists('unit', dto.unit_id);
     if (dto.category_id) await this.ensureExists('categories', dto.category_id);
@@ -135,7 +131,7 @@ export class ItemsService extends BaseService<any> {
   }
 
   /* ============================================================
-     SOFT DELETE (gunakan BaseService.softDelete)
+      SOFT DELETE
   ============================================================ */
 
   async softDeleteItem(id: string) {
@@ -143,7 +139,7 @@ export class ItemsService extends BaseService<any> {
   }
 
   /* ============================================================
-     RESTORE (gunakan BaseService.restore)
+      RESTORE
   ============================================================ */
 
   async restoreItem(id: string) {
@@ -151,7 +147,7 @@ export class ItemsService extends BaseService<any> {
   }
 
   /* ============================================================
-     HARD DELETE (gunakan BaseService.permanentDelete)
+      HARD DELETE
   ============================================================ */
 
   async deleteItemPermanently(id: string) {

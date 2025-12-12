@@ -161,60 +161,82 @@ export abstract class BaseService<T> {
     const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
     const field = softDeleteField as string;
 
+    // Cek record yang belum soft delete
     const found = await model.findFirst({
-      where: { id, [field]: null },
+      where: {
+        id,
+        [field]: null, // deleted_at harus null
+      },
     });
 
     if (!found) {
       throw new NotFoundException(
-        `Record with ID ${id} not found or already deleted.`,
+        `Record with ID ${id} not found or already soft-deleted.`,
       );
     }
 
+    // Soft delete = set deleted_at = now()
     return model.update({
       where: { id },
       data: { [field]: new Date() },
     });
   }
 
-  /* ============================================================
-     RESTORE
-  ============================================================ */
-
+  /**
+   * RESTORE = Set deleted_at kembali menjadi null
+   */
   async restore(id: string): Promise<T> {
     const model = this.getModel();
     const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
     const field = softDeleteField as string;
 
     const found = await model.findFirst({
-      where: { id, [field]: { not: null } },
+      where: {
+        id,
+        [field]: { not: null }, // harus sudah soft delete dulu
+      },
     });
 
     if (!found) {
       throw new NotFoundException(
-        `Record with ID ${id} not found or not deleted.`,
+        `Record with ID ${id} not found or not soft-deleted.`,
       );
     }
 
+    // Restore
     return model.update({
       where: { id },
       data: { [field]: null },
     });
   }
 
-  /* ============================================================
-     HARD DELETE
-  ============================================================ */
+  /**
+   * HARD DELETE = Menghapus record secara permanen dari database
+   */
   async hardDelete(id: string): Promise<void> {
     const model = this.getModel();
+    const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
+    const field = softDeleteField as string;
 
-    const found = await model.findUnique({ where: { id } });
+    // Cek apakah record sudah soft delete
+    const found = await model.findFirst({
+      where: {
+        id,
+        [field]: { not: null }, // pastikan deleted_at terisi
+      },
+    });
 
     if (!found) {
-      throw new NotFoundException(`Record with ID ${id} not found.`);
+      throw new NotFoundException(
+        `Record with ID ${id} not found OR not soft-deleted.`,
+      );
     }
 
-    await model.delete({ where: { id } });
+    // HARD DELETE = delete permanen dari database
+    // Ini TIDAK mengisi deleted_at
+    await model.delete({
+      where: { id },
+    });
   }
   
   /* ============================================================
