@@ -8,6 +8,9 @@
 
 */
 -- AlterTable
+ALTER TABLE "Item" ALTER COLUMN "created_at" SET DEFAULT CURRENT_TIMESTAMP;
+
+-- AlterTable
 ALTER TABLE "Odtw" DROP COLUMN "deleted_at",
 ADD COLUMN     "deleted_at" TIMESTAMP(3);
 

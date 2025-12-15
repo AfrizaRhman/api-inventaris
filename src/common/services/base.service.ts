@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   PaginationDto,
@@ -20,13 +20,13 @@ export abstract class BaseService<T> {
   protected abstract getQueryOptions(): QueryBuilderOptions;
 
   /* ============================================================
-     PAGINATION
+     PAGINATION (FIXED)
   ============================================================ */
 
   async findAllPaginated(
     paginationDto: PaginationDto,
     additionalWhere: Record<string, any> = {},
-    select?: Record<string, any>,
+    include?: Record<string, any>,
   ): Promise<PaginatedResponse<T>> {
     const options = this.getQueryOptions();
     const model = this.getModel();
@@ -36,28 +36,30 @@ export abstract class BaseService<T> {
       take,
       where,
       orderBy,
-      include,
-      select: builtSelect,
       pagination,
     } = QueryBuilderService.buildQueryParams(
       paginationDto,
       options,
       additionalWhere,
-      select,
+      undefined, // ❌ JANGAN kirim select
     );
 
     const total = await model.count({ where });
-    const finalSelect = select || builtSelect;
 
-    const queryOptions: any = { skip, take, where, orderBy };
+    const queryOptions: any = {
+      skip,
+      take,
+      where,
+      orderBy,
+    };
 
-    if (queryOptions.orderBy && queryOptions.orderBy.createdAt) {
+    // normalisasi createdAt → created_at
+    if (queryOptions.orderBy?.createdAt) {
       queryOptions.orderBy = { created_at: queryOptions.orderBy.createdAt };
     }
 
-    if (finalSelect && Object.keys(finalSelect).length > 0) {
-      queryOptions.select = finalSelect;
-    } else if (include && Object.keys(include).length > 0) {
+    // ✅ HANYA include relasi
+    if (include && Object.keys(include).length > 0) {
       queryOptions.include = include;
     }
 
@@ -78,33 +80,31 @@ export abstract class BaseService<T> {
   async findAll(args: any = {}, includeDeleted = false): Promise<T[]> {
     const model = this.getModel();
     const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
-    const field = softDeleteField as string;
 
     const where = {
       ...args.where,
-      ...(includeDeleted ? {} : { [field]: null }),
+      ...(includeDeleted ? {} : { [softDeleteField]: null }),
     };
 
-    return await model.findMany({ ...args, where });
+    return model.findMany({ ...args, where });
   }
 
   async findById(
     id: string,
-    select?: Record<string, any>,
+    include?: Record<string, any>,
     includeDeleted = false,
   ): Promise<T | null> {
     const model = this.getModel();
     const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
-    const field = softDeleteField as string;
 
     const where: any = {
       id,
-      ...(includeDeleted ? {} : { [field]: null }),
+      ...(includeDeleted ? {} : { [softDeleteField]: null }),
     };
 
-    return await model.findFirst({
+    return model.findFirst({
       where,
-      ...(select && { select }),
+      ...(include && { include }),
     });
   }
 
@@ -124,161 +124,119 @@ export abstract class BaseService<T> {
   ============================================================ */
 
   async create(data: any, include?: Record<string, any>): Promise<T> {
-    const model = this.getModel();
+    const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
 
-    return await model.create({
-      data,
+    return this.getModel().create({
+      data: {
+        ...data,
+        [softDeleteField]: null,
+      },
       ...(include && { include }),
     });
   }
 
-  async update(id: string, data: any, select?: Record<string, any>): Promise<T> {
+  async update(
+    id: string,
+    data: any,
+    include?: Record<string, any>,
+  ): Promise<T> {
     const model = this.getModel();
     const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
-    const field = softDeleteField as string;
 
     const found = await model.findFirst({
-      where: { id, [field]: null },
+      where: { id, [softDeleteField]: null },
     });
 
     if (!found) {
       throw new NotFoundException(`Record with ID ${id} not found.`);
     }
 
-    return await model.update({
+    return model.update({
       where: { id },
       data,
-      ...(select && { select }),
+      ...(include && { include }),
     });
   }
 
   /* ============================================================
-     SOFT DELETE
+     SOFT DELETE / RESTORE / HARD DELETE
   ============================================================ */
 
   async softDelete(id: string): Promise<T> {
     const model = this.getModel();
     const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
-    const field = softDeleteField as string;
 
-    // Cek record yang belum soft delete
     const found = await model.findFirst({
-      where: {
-        id,
-        [field]: null, // deleted_at harus null
-      },
+      where: { id, [softDeleteField]: null },
     });
 
     if (!found) {
       throw new NotFoundException(
-        `Record with ID ${id} not found or already soft-deleted.`,
+        `Record with ID ${id} not found or already deleted.`,
       );
     }
 
-    // Soft delete = set deleted_at = now()
     return model.update({
       where: { id },
-      data: { [field]: new Date() },
+      data: { [softDeleteField]: new Date() },
     });
   }
 
-  /**
-   * RESTORE = Set deleted_at kembali menjadi null
-   */
   async restore(id: string): Promise<T> {
     const model = this.getModel();
     const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
-    const field = softDeleteField as string;
 
     const found = await model.findFirst({
-      where: {
-        id,
-        [field]: { not: null }, // harus sudah soft delete dulu
-      },
+      where: { id, [softDeleteField]: { not: null } },
     });
 
     if (!found) {
       throw new NotFoundException(
-        `Record with ID ${id} not found or not soft-deleted.`,
+        `Record with ID ${id} not found or not deleted.`,
       );
     }
 
-    // Restore
     return model.update({
       where: { id },
-      data: { [field]: null },
+      data: { [softDeleteField]: null },
     });
   }
 
-  /**
-   * HARD DELETE = Menghapus record secara permanen dari database
-   */
   async hardDelete(id: string): Promise<void> {
     const model = this.getModel();
     const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
-    const field = softDeleteField as string;
 
-    // Cek apakah record sudah soft delete
     const found = await model.findFirst({
-      where: {
-        id,
-        [field]: { not: null }, // pastikan deleted_at terisi
-      },
+      where: { id, [softDeleteField]: { not: null } },
     });
 
     if (!found) {
       throw new NotFoundException(
-        `Record with ID ${id} not found OR not soft-deleted.`,
+        `Record with ID ${id} not found or not soft deleted.`,
       );
     }
 
-    // HARD DELETE = delete permanen dari database
-    // Ini TIDAK mengisi deleted_at
-    await model.delete({
-      where: { id },
-    });
+    await model.delete({ where: { id } });
   }
-  
+
   /* ============================================================
-     EXTRA HELPERS
+     EXTRA
   ============================================================ */
 
   async findAllWithDeleted(args: any = {}): Promise<T[]> {
-    const model = this.getModel();
-    return await model.findMany(args);
+    return this.getModel().findMany(args);
   }
 
   async findDeleted(args: any = {}): Promise<T[]> {
     const model = this.getModel();
     const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
-    const field = softDeleteField as string;
 
-    const where = {
-      ...args.where,
-      [field]: { not: null },
-    };
-
-    return await model.findMany({ ...args, where });
-  }
-
-  async getSoftDeleteStats(): Promise<{
-    total: number;
-    active: number;
-    deleted: number;
-  }> {
-    const model = this.getModel();
-    const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
-    const field = softDeleteField as string;
-
-    const [total, active] = await Promise.all([
-      model.count(),
-      model.count({ where: { [field]: null } }),
-    ]);
-
-    return {
-      total,
-      active,
-      deleted: total - active,
-    };
+    return model.findMany({
+      ...args,
+      where: {
+        ...args.where,
+        [softDeleteField]: { not: null },
+      },
+    });
   }
 }

@@ -48,7 +48,7 @@ model Warehouse {
 }
 
 model Item {
-  id          String  @id @default(uuid())
+  id          String   @id @default(uuid())
   unit_id     String
   category_id String
   name        String
@@ -59,14 +59,16 @@ model Item {
   description String?
   code        String?
 
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-   deleted_at DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime? 
 
   unit     Unit       @relation(fields: [unit_id], references: [id])
   category Categories @relation(fields: [category_id], references: [id])
-  sku      Sku[]
+
+  skus Sku[] // ✅ FIX ERROR
 }
+
 
 model Sku {
   id           String  @id @default(uuid())

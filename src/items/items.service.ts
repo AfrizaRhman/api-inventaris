@@ -64,21 +64,23 @@ export class ItemsService extends BaseService<any> {
     await this.ensureExists('unit', dto.unit_id);
     await this.ensureExists('categories', dto.category_id);
 
-    return this.create(
-      {
-        name: dto.name,
-        supplier: dto.supplier ?? null,
-        price: dto.price ?? null,
-        stock: dto.stock,
-        description: dto.description ?? null,
-        code: dto.code ?? null,
-        image: dto.image ?? null,
-        unit_id: dto.unit_id,
-        category_id: dto.category_id,
-        created_at: new Date(),
-      },
-      this.itemInclude,
-    );
+   return this.create(
+  {
+    name: dto.name,
+    supplier: dto.supplier ?? null,
+    price: dto.price ?? null,
+    stock: dto.stock,
+    description: dto.description ?? null,
+    code: dto.code ?? null,
+    image: dto.image ?? null,
+    unit_id: dto.unit_id,
+    category_id: dto.category_id,
+    deleted_at: null, // ✅ WAJIB
+  },
+  this.itemInclude,
+);
+
+
   }
 
   /* ============================================================

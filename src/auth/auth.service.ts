@@ -420,6 +420,8 @@ export class AuthService extends BaseService<User> {
     });
   }
 
+  
+
   async updateByUserId(
     id: string,
     updateData: Partial<UpdateAuthDto>,
@@ -481,4 +483,22 @@ export class AuthService extends BaseService<User> {
 
     return updatedUser;
   }
+
+   async getSoftDeleteStats() {
+    const model = this.prismaService.db.user;
+
+    const [total, active] = await Promise.all([
+      model.count(),
+      model.count({
+        where: { deleted_at: null },
+      }),
+    ]);
+
+    return {
+      total,
+      active,
+      deleted: total - active,
+    };
+  }
+  
 }
