@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Put,
   Query,
 } from '@nestjs/common';
 
@@ -33,7 +34,6 @@ export class ItemMovementController {
     return this.service.findItemMovementById(id);
   }
 
-  // filter via body
   @Post('filter')
   getFiltered(@Body() body: { filters: ColumnFilterDto[] }) {
     return this.service.getItemMovementsByFilter(body.filters);
@@ -44,8 +44,27 @@ export class ItemMovementController {
     return this.service.updateItemMovement(id, dto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.service.removeItemMovement(id);
+  /* -----------------------------
+     SOFT DELETE
+  ------------------------------*/
+  @Patch(':id/soft-delete')
+  softDelete(@Param('id') id: string) {
+    return this.service.softDelete(id);
+  }
+
+  /* -----------------------------
+     RESTORE
+  ------------------------------*/
+  @Put(':id/restore')
+  restore(@Param('id') id: string) {
+    return this.service.restore(id);
+  }
+
+  /* -----------------------------
+     HARD DELETE
+  ------------------------------*/
+  @Delete(':id/hard-delete')
+  hardDelete(@Param('id') id: string) {
+    return this.service.hardDelete(id);
   }
 }

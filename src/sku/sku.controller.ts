@@ -39,7 +39,7 @@ export class SkuController {
     return this.skuService.findById(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   update(@Param('id') id: string, @Body() data: any) {
     return this.skuService.update(id, data);
   }
@@ -48,7 +48,7 @@ export class SkuController {
   // ✔ SOFT DELETE 
   // PATCH /sku/:id/soft-delete
   // ============================================
-  @Patch(':id')
+  @Patch(':id/soft-delete')
   softDelete(@Param('id') id: string) {
     return this.skuService.softDelete(id);
   }

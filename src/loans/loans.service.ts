@@ -1,13 +1,33 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { BaseService } from '../common/services/base.service';
+import { QueryBuilderOptions } from '../common/dto/pagination.dto';
 import { CreateLoanDto } from './dto/create-loan.dto';
 import { UpdateLoanDto } from './dto/update-loan.dto';
 
 @Injectable()
-export class LoansService {
-  constructor(private prisma: PrismaService) {}
+export class LoansService extends BaseService<any> {
+  constructor(protected prisma: PrismaService) {
+    super(prisma);
+  }
 
-  async create(dto: CreateLoanDto, adminName: string) {
+  /* ============================================================
+        BASE-SERVICE CONFIG
+    ============================================================ */
+  protected getModel() {
+    return this.prisma.loans;
+  }
+
+  protected getQueryOptions(): QueryBuilderOptions {
+    return {
+      softDeleteField: 'deleted_at',
+    };
+  }
+
+  /* ============================================================
+        CREATE LOAN (custom)
+    ============================================================ */
+  async createLoan(dto: CreateLoanDto, adminName: string) {
     return this.prisma.loans.create({
       data: {
         name: dto.name,
@@ -34,55 +54,85 @@ export class LoansService {
             : undefined,
       },
       include: {
-        loan_details: true,
-      },
-    });
-  }
-
-  findAll() {
-    return this.prisma.loans.findMany({
-      include: {
         loan_details: {
-          include: {
-            sku: true,
-          },
+          include: { sku: true },
         },
       },
     });
   }
 
-  findOne(id: string) {
-    return this.prisma.loans.findUnique({
-      where: { id },
-      include: {
-        loan_details: {
-          include: {
-            sku: true,
-          },
-        },
-      },
+  /* ============================================================
+        FIND ALL PAGINATED (custom)
+    ============================================================ */
+  async findAllLoans(pagination: any) {
+    return this.findAllPaginated(
+      pagination,
+      {},
+      {
+        id: true,
+        name: true,
+        phone_number: true,
+        email: true,
+        necessity: true,
+        note: true,
+        loan_date: true,
+        created_by: true,
+        updated_by: true,
+        deleted_at: true,
+        loan_details: { include: { sku: true } },
+      }
+    );
+  }
+
+  /* ============================================================
+        FIND ONE (custom)
+    ============================================================ */
+  async findLoanById(id: string) {
+    const loan = await this.findById(id, {
+      id: true,
+      name: true,
+      phone_number: true,
+      email: true,
+      necessity: true,
+      note: true,
+      loan_date: true,
+      created_by: true,
+      updated_by: true,
+      deleted_at: true,
+      loan_details: { include: { sku: true } },
+    });
+
+    if (!loan) throw new NotFoundException('Loan not found');
+    return loan;
+  }
+
+  /* ============================================================
+        UPDATE LOAN (custom)
+    ============================================================ */
+  async updateLoan(id: string, dto: UpdateLoanDto, adminName: string) {
+    return super.update(id, {
+      name: dto.name,
+      phone_number: dto.phone_number,
+      email: dto.email,
+      necessity: dto.necessity,
+      note: dto.note,
+      loan_date: dto.loan_date ? new Date(dto.loan_date) : undefined,
+      updated_by: adminName,
     });
   }
 
-  update(id: string, dto: UpdateLoanDto, adminName: string) {
-    return this.prisma.loans.update({
-      where: { id },
-      data: {
-        name: dto.name,
-        phone_number: dto.phone_number,
-        email: dto.email,
-        necessity: dto.necessity,
-        note: dto.note,
-        loan_date: dto.loan_date ? new Date(dto.loan_date) : undefined,
-        updated_by: adminName,
-      },
-      include: { loan_details: true },
-    });
+  /* ============================================================
+        DELETE HANDLING (inherit BaseService)
+    ============================================================ */
+  async softDeleteLoan(id: string) {
+    return super.softDelete(id);
   }
 
-  remove(id: string) {
-    return this.prisma.loans.delete({
-      where: { id },
-    });
+  async restoreLoan(id: string) {
+    return super.restore(id);
+  }
+
+  async hardDeleteLoan(id: string) {
+    return super.hardDelete(id);
   }
 }

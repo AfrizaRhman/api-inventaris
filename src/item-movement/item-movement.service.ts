@@ -3,6 +3,7 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
+
 import { PrismaService } from '../prisma/prisma.service';
 import { BaseService } from '../common/services/base.service';
 
@@ -23,14 +24,17 @@ export class ItemMovementService extends BaseService<any> {
     super(prismaService);
   }
 
+  /* ======================================================
+        MODEL
+  ====================================================== */
   protected getModel() {
-    return this.prismaService.itemMovement; // FIXED
+    return this.prismaService.itemMovement;
   }
 
   protected getQueryOptions(): QueryBuilderOptions {
     return {
-      defaultSortField: 'name',
-      defaultSortDirection: SortDirection.ASC,
+      defaultSortField: 'created_at',
+      defaultSortDirection: SortDirection.DESC,
       allowedSortFields: [
         'id',
         'name',
@@ -50,12 +54,13 @@ export class ItemMovementService extends BaseService<any> {
         'updated_by',
       ],
       defaultSearchFields: ['name', 'email', 'necessity'],
+      softDeleteField: 'deleted_at',
     };
   }
 
-  // -------------------------------------------------------------
-  // CREATE
-  // -------------------------------------------------------------
+  /* ======================================================
+        CREATE
+  ====================================================== */
   async createItemMovement(data: CreateItemMovementDto) {
     const exists = await this.prismaService.itemMovement.findFirst({
       where: {
@@ -101,9 +106,9 @@ export class ItemMovementService extends BaseService<any> {
     });
   }
 
-  // -------------------------------------------------------------
-  // PAGINATION
-  // -------------------------------------------------------------
+  /* ======================================================
+        PAGINATION
+  ====================================================== */
   async findAllItemMovementsPaginated(pagination: PaginationDto) {
     const select = {
       id: true,
@@ -119,33 +124,35 @@ export class ItemMovementService extends BaseService<any> {
     return this.findAllPaginated(pagination, {}, select);
   }
 
-  // -------------------------------------------------------------
-  // FIND BY ID
-  // -------------------------------------------------------------
+  /* ======================================================
+        FIND BY ID
+  ====================================================== */
   async findItemMovementById(id: string) {
     const data = await this.prismaService.itemMovement.findUnique({
       where: { id },
       include: {
         details: {
           include: {
-            sku: { include: { item: true } },
+            sku: { include: { item: true, warehouse: true } },
           },
         },
       },
     });
 
     if (!data) throw new NotFoundException('Item Movement not found');
+
     return data;
   }
 
-  // -------------------------------------------------------------
-  // UPDATE
-  // -------------------------------------------------------------
+  /* ======================================================
+        UPDATE
+  ====================================================== */
   async updateItemMovement(id: string, data: UpdateItemMovementDto) {
     await this.findItemMovementById(id);
 
     const { details, ...rest } = data;
 
+    // Update header
     await this.prismaService.itemMovement.update({
       where: { id },
       data: {
@@ -157,6 +164,7 @@ export class ItemMovementService extends BaseService<any> {
       },
     });
 
+    // Replace all details
     if (Array.isArray(details)) {
       await this.prismaService.itemMovementDetail.deleteMany({
         where: { item_movement_id: id },
@@ -176,9 +184,9 @@ export class ItemMovementService extends BaseService<any> {
     return this.findItemMovementById(id);
   }
 
-  // -------------------------------------------------------------
-  // DELETE
-  // -------------------------------------------------------------
+  /* ======================================================
+        DELETE (COMPATIBLE WITH BASE SERVICE)
+  ====================================================== */
   async removeItemMovement(id: string) {
     await this.findItemMovementById(id);
 
@@ -191,16 +199,33 @@ export class ItemMovementService extends BaseService<any> {
     });
   }
 
-  // -------------------------------------------------------------
-  // FILTER
-  // -------------------------------------------------------------
+  /* ======================================================
+        FILTER
+  ====================================================== */
   async getItemMovementsByFilter(filters: ColumnFilterDto[]) {
     const options = this.getQueryOptions();
+
     const params = QueryBuilderService.buildQueryParams(
       { filters } as PaginationDto,
       options,
     );
 
     return this.findAll(params);
+  }
+
+  /* ======================================================
+        SOFT DELETE / RESTORE / HARD DELETE
+  ====================================================== */
+
+  async softDelete(id: string) {
+    return super.softDelete(id);
+  }
+
+  async restore(id: string) {
+    return super.restore(id);
+  }
+
+  async hardDelete(id: string) {
+    return super.hardDelete(id);
   }
 }
