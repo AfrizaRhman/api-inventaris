@@ -3,17 +3,17 @@ import {
   Get,
   Post,
   Body,
-  Patch,
-  Param,
-  Delete,
   Put,
+  Param,
+  Patch,
+  Delete,
   Query,
 } from '@nestjs/common';
 
 import { ItemMovementService } from './item-movement.service';
 import { CreateItemMovementDto } from './dto/create-item-movement.dto';
 import { UpdateItemMovementDto } from './dto/update-item-movement.dto';
-import { PaginationDto, ColumnFilterDto } from '../common/dto/pagination.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('item-movement')
 export class ItemMovementController {
@@ -29,14 +29,16 @@ export class ItemMovementController {
 
   /* =========================
      GET ALL (WITH DETAILS)
+     GET /item-movement
   ========================== */
   @Get()
   findAll(@Query() pagination: PaginationDto) {
-    return this.service.findAllItemMovementsPaginated(pagination);
+    return this.service.findAllItemMovements(pagination);
   }
 
   /* =========================
      GET BY ID
+     GET /item-movement/:id
   ========================== */
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -44,17 +46,9 @@ export class ItemMovementController {
   }
 
   /* =========================
-     FILTER
-  ========================== */
-  @Post('filter')
-  getFiltered(@Body() body: { filters: ColumnFilterDto[] }) {
-    return this.service.getItemMovementsByFilter(body.filters);
-  }
-
-  /* =========================
      UPDATE
   ========================== */
-  @Patch(':id')
+  @Put(':id')
   update(@Param('id') id: string, @Body() dto: UpdateItemMovementDto) {
     return this.service.updateItemMovement(id, dto);
   }
@@ -64,7 +58,7 @@ export class ItemMovementController {
   ========================== */
   @Patch(':id/soft-delete')
   softDelete(@Param('id') id: string) {
-    return this.service.softDelete(id);
+    return this.service.softDeleteItemMovement(id);
   }
 
   /* =========================
@@ -72,7 +66,7 @@ export class ItemMovementController {
   ========================== */
   @Put(':id/restore')
   restore(@Param('id') id: string) {
-    return this.service.restore(id);
+    return this.service.restoreItemMovement(id);
   }
 
   /* =========================
@@ -80,6 +74,6 @@ export class ItemMovementController {
   ========================== */
   @Delete(':id/hard-delete')
   hardDelete(@Param('id') id: string) {
-    return this.service.hardDelete(id);
+    return this.service.hardDeleteItemMovement(id);
   }
 }
