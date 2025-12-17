@@ -128,9 +128,9 @@ model Loans {
   necessity    String?
   note         String?
   loan_date    DateTime     @default(now())
-  deleted_at   Int?
-  created_by   String?
-  updated_by   String?
+  deleted_at DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 
   loan_details LoanDetail[]
 

@@ -9,6 +9,7 @@ import {
   Max,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
+import { Prisma } from '@prisma/client';
 
 export enum SortDirection {
   ASC = 'asc',
@@ -121,4 +122,6 @@ export interface QueryBuilderOptions {
   allowedIncludes?: string[];
   defaultSelect?: Record<string, any>;
   allowedSelectFields?: string[];
+  // ✅ TAMBAHKAN INI
+  defaultOrderBy?: Prisma.Enumerable<Prisma.UserOrderByWithRelationInput>;
 }

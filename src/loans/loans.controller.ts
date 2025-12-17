@@ -7,7 +7,6 @@ import {
   Param,
   Patch,
   Delete,
-  Req,
   Query,
 } from '@nestjs/common';
 import { LoansService } from './loans.service';
@@ -20,11 +19,11 @@ export class LoansController {
   constructor(private readonly loansService: LoansService) {}
 
   @Post()
-  create(@Body() dto: CreateLoanDto, @Req() req) {
-    const adminName = req.user?.name || 'SYSTEM';
-    return this.loansService.createLoan(dto, adminName);
+  create(@Body() dto: CreateLoanDto) {
+    return this.loansService.createLoan(dto);
   }
 
+  // ✅ FIXED — SEKARANG AMAN
   @Get()
   findAll(@Query() pagination: PaginationDto) {
     return this.loansService.findAllLoans(pagination);
@@ -36,9 +35,8 @@ export class LoansController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateLoanDto, @Req() req) {
-    const adminName = req.user?.name || 'SYSTEM';
-    return this.loansService.updateLoan(id, dto, adminName);
+  update(@Param('id') id: string, @Body() dto: UpdateLoanDto) {
+    return this.loansService.updateLoan(id, dto);
   }
 
   @Patch(':id/soft-delete')
