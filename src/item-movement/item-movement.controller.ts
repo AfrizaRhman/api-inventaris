@@ -19,50 +19,65 @@ import { PaginationDto, ColumnFilterDto } from '../common/dto/pagination.dto';
 export class ItemMovementController {
   constructor(private readonly service: ItemMovementService) {}
 
+  /* =========================
+     CREATE
+  ========================== */
   @Post()
   create(@Body() dto: CreateItemMovementDto) {
     return this.service.createItemMovement(dto);
   }
 
+  /* =========================
+     GET ALL (WITH DETAILS)
+  ========================== */
   @Get()
-  findAllPaginated(@Query() pagination: PaginationDto) {
+  findAll(@Query() pagination: PaginationDto) {
     return this.service.findAllItemMovementsPaginated(pagination);
   }
 
+  /* =========================
+     GET BY ID
+  ========================== */
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.service.findItemMovementById(id);
   }
 
+  /* =========================
+     FILTER
+  ========================== */
   @Post('filter')
   getFiltered(@Body() body: { filters: ColumnFilterDto[] }) {
     return this.service.getItemMovementsByFilter(body.filters);
   }
 
+  /* =========================
+     UPDATE
+  ========================== */
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateItemMovementDto) {
     return this.service.updateItemMovement(id, dto);
   }
 
-  /* -----------------------------
+  /* =========================
      SOFT DELETE
-  ------------------------------*/
+  ========================== */
   @Patch(':id/soft-delete')
   softDelete(@Param('id') id: string) {
     return this.service.softDelete(id);
   }
 
-  /* -----------------------------
+  /* =========================
      RESTORE
-  ------------------------------*/
+  ========================== */
   @Put(':id/restore')
   restore(@Param('id') id: string) {
     return this.service.restore(id);
   }
 
-  /* -----------------------------
+  /* =========================
      HARD DELETE
-  ------------------------------*/
+  ========================== */
   @Delete(':id/hard-delete')
   hardDelete(@Param('id') id: string) {
     return this.service.hardDelete(id);

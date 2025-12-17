@@ -7,55 +7,21 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { BaseService } from '../common/services/base.service';
 
-import {
-  QueryBuilderOptions,
-  PaginationDto,
-  SortDirection,
-  ColumnFilterDto,
-} from '../common/dto/pagination.dto';
-
 import { CreateItemMovementDto } from './dto/create-item-movement.dto';
 import { UpdateItemMovementDto } from './dto/update-item-movement.dto';
-import { QueryBuilderService } from 'src/common/services/query-builder.service';
+import { QueryBuilderOptions } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class ItemMovementService extends BaseService<any> {
+  protected getModel() {
+    throw new Error('Method not implemented.');
+  }
+  protected getQueryOptions(): QueryBuilderOptions {
+    throw new Error('Method not implemented.');
+  }
+  [x: string]: any;
   constructor(protected prismaService: PrismaService) {
     super(prismaService);
-  }
-
-  /* ======================================================
-        MODEL
-  ====================================================== */
-  protected getModel() {
-    return this.prismaService.itemMovement;
-  }
-
-  protected getQueryOptions(): QueryBuilderOptions {
-    return {
-      defaultSortField: 'created_at',
-      defaultSortDirection: SortDirection.DESC,
-      allowedSortFields: [
-        'id',
-        'name',
-        'email',
-        'necessity',
-        'request_date',
-        'created_by',
-        'updated_by',
-      ],
-      allowedFilterFields: [
-        'id',
-        'name',
-        'email',
-        'necessity',
-        'request_date',
-        'created_by',
-        'updated_by',
-      ],
-      defaultSearchFields: ['name', 'email', 'necessity'],
-      softDeleteField: 'deleted_at',
-    };
   }
 
   /* ======================================================
@@ -80,7 +46,9 @@ export class ItemMovementService extends BaseService<any> {
         phone_number: data.phone_number ?? null,
         email: data.email ?? null,
         necessity: data.necessity ?? null,
-        request_date: data.request_date ? new Date(data.request_date) : null,
+        request_date: data.request_date
+          ? new Date(data.request_date)
+          : null,
         created_by: data.created_by ?? null,
         updated_by: null,
 
@@ -93,6 +61,7 @@ export class ItemMovementService extends BaseService<any> {
       },
       include: {
         details: {
+          where: { deleted_at: null },
           include: {
             sku: {
               include: {
@@ -107,21 +76,30 @@ export class ItemMovementService extends BaseService<any> {
   }
 
   /* ======================================================
-        PAGINATION
+        ✅ GET ALL ITEM MOVEMENT (FIXED)
   ====================================================== */
-  async findAllItemMovementsPaginated(pagination: PaginationDto) {
-    const select = {
-      id: true,
-      name: true,
-      email: true,
-      phone_number: true,
-      necessity: true,
-      request_date: true,
-      created_by: true,
-      updated_by: true,
-    };
-
-    return this.findAllPaginated(pagination, {}, select);
+  async findAllItemMovements() {
+    return this.prismaService.itemMovement.findMany({
+      where: {
+        deleted_at: null,
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+      include: {
+        details: {
+          where: { deleted_at: null },
+          include: {
+            sku: {
+              include: {
+                item: true,
+                warehouse: true,
+              },
+            },
+          },
+        },
+      },
+    });
   }
 
   /* ======================================================
@@ -132,14 +110,22 @@ export class ItemMovementService extends BaseService<any> {
       where: { id },
       include: {
         details: {
+          where: { deleted_at: null },
           include: {
-            sku: { include: { item: true, warehouse: true } },
+            sku: {
+              include: {
+                item: true,
+                warehouse: true,
+              },
+            },
           },
         },
       },
     });
 
-    if (!data) throw new NotFoundException('Item Movement not found');
+    if (!data) {
+      throw new NotFoundException('Item Movement not found');
+    }
 
     return data;
   }
@@ -152,7 +138,6 @@ export class ItemMovementService extends BaseService<any> {
 
     const { details, ...rest } = data;
 
-    // Update header
     await this.prismaService.itemMovement.update({
       where: { id },
       data: {
@@ -164,7 +149,6 @@ export class ItemMovementService extends BaseService<any> {
       },
     });
 
-    // Replace all details
     if (Array.isArray(details)) {
       await this.prismaService.itemMovementDetail.deleteMany({
         where: { item_movement_id: id },
@@ -185,38 +169,8 @@ export class ItemMovementService extends BaseService<any> {
   }
 
   /* ======================================================
-        DELETE (COMPATIBLE WITH BASE SERVICE)
-  ====================================================== */
-  async removeItemMovement(id: string) {
-    await this.findItemMovementById(id);
-
-    await this.prismaService.itemMovementDetail.deleteMany({
-      where: { item_movement_id: id },
-    });
-
-    return this.prismaService.itemMovement.delete({
-      where: { id },
-    });
-  }
-
-  /* ======================================================
-        FILTER
-  ====================================================== */
-  async getItemMovementsByFilter(filters: ColumnFilterDto[]) {
-    const options = this.getQueryOptions();
-
-    const params = QueryBuilderService.buildQueryParams(
-      { filters } as PaginationDto,
-      options,
-    );
-
-    return this.findAll(params);
-  }
-
-  /* ======================================================
         SOFT DELETE / RESTORE / HARD DELETE
   ====================================================== */
-
   async softDelete(id: string) {
     return super.softDelete(id);
   }
