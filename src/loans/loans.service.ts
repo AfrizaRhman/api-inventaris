@@ -1,10 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BaseService } from '../common/services/base.service';
-import { QueryBuilderOptions } from '../common/dto/pagination.dto';
+import {
+  QueryBuilderOptions,
+  PaginationDto,
+  SortDirection,
+} from '../common/dto/pagination.dto';
 import { CreateLoanDto } from './dto/create-loan.dto';
 import { UpdateLoanDto } from './dto/update-loan.dto';
-import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Injectable()
 export class LoansService extends BaseService<any> {
@@ -21,7 +24,39 @@ export class LoansService extends BaseService<any> {
   protected getQueryOptions(): QueryBuilderOptions {
     return {
       softDeleteField: 'deleted_at',
-      defaultOrderBy: { createdAt: 'desc' }, // 🔥 PENTING
+
+      // ✅ FIELD YANG BENER ADA DI MODEL
+      defaultSortField: 'loan_date',
+      defaultSortDirection: SortDirection.DESC,
+
+      allowedSortFields: [
+        'loan_date',
+        'name',
+        'email',
+        'phone_number',
+      ],
+
+      allowedFilterFields: [
+        'name',
+        'email',
+        'phone_number',
+        'loan_date',
+      ],
+
+      defaultSearchFields: [
+        'name',
+        'email',
+        'phone_number',
+      ],
+
+      defaultInclude: {
+        loan_details: {
+          where: { deleted_at: null },
+          include: { sku: true },
+        },
+      },
+
+      allowedIncludes: ['loan_details'],
     };
   }
 
@@ -59,12 +94,12 @@ export class LoansService extends BaseService<any> {
     });
   }
 
-  /* ================= FIND ALL (FIXED) ================= */
+  /* ================= FIND ALL ================= */
 
   async findAllLoans(pagination: PaginationDto) {
     return this.findAllPaginated(
       pagination,
-      {}, // where tambahan
+      {}, // additional where
       {
         loan_details: {
           where: { deleted_at: null },

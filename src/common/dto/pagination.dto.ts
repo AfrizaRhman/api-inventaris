@@ -123,5 +123,5 @@ export interface QueryBuilderOptions {
   defaultSelect?: Record<string, any>;
   allowedSelectFields?: string[];
   // ✅ TAMBAHKAN INI
-  defaultOrderBy?: Prisma.Enumerable<Prisma.UserOrderByWithRelationInput>;
+  defaultOrderBy?: Record<string, 'asc' | 'desc'>;
 }

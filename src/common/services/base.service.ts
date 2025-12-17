@@ -20,63 +20,55 @@ export abstract class BaseService<T> {
   protected abstract getQueryOptions(): QueryBuilderOptions;
 
   /* ============================================================
-     PAGINATION (FIXED)
+     PAGINATION (SAFE FOR ALL MODELS)
   ============================================================ */
-
   async findAllPaginated(
-    paginationDto: PaginationDto,
-    additionalWhere: Record<string, any> = {},
-    include?: Record<string, any>,
-  ): Promise<PaginatedResponse<T>> {
-    const options = this.getQueryOptions();
-    const model = this.getModel();
+  paginationDto: PaginationDto,
+  additionalWhere: Record<string, any> = {},
+  include?: Record<string, any>,
+): Promise<PaginatedResponse<T>> {
+  const options = this.getQueryOptions();
+  const model = this.getModel();
 
-    const {
-      skip,
-      take,
-      where,
-      orderBy,
-      pagination,
-    } = QueryBuilderService.buildQueryParams(
-      paginationDto,
-      options,
-      additionalWhere,
-      undefined, // ❌ JANGAN kirim select
-    );
+  const {
+    skip,
+    take,
+    where,
+    orderBy,
+    pagination,
+  } = QueryBuilderService.buildQueryParams(
+    paginationDto,
+    options,
+    additionalWhere,
+  );
 
-    const total = await model.count({ where });
+  const total = await model.count({ where });
 
-    const queryOptions: any = {
-      skip,
-      take,
-      where,
-      orderBy,
-    };
+  const queryOptions: any = {
+    skip,
+    take,
+    where,
+    orderBy, // 👈 langsung pakai
+  };
 
-    // normalisasi createdAt → created_at
-    if (queryOptions.orderBy?.createdAt) {
-      queryOptions.orderBy = { created_at: queryOptions.orderBy.createdAt };
-    }
-
-    // ✅ HANYA include relasi
-    if (include && Object.keys(include).length > 0) {
-      queryOptions.include = include;
-    }
-
-    const data = await model.findMany(queryOptions);
-
-    return QueryBuilderService.formatPaginatedResponse(
-      data,
-      total,
-      pagination.page,
-      pagination.limit,
-    );
+  if (include && Object.keys(include).length > 0) {
+    queryOptions.include = include;
   }
+
+  const data = await model.findMany(queryOptions);
+
+  return QueryBuilderService.formatPaginatedResponse(
+    data,
+    total,
+    pagination.page,
+    pagination.limit,
+  );
+}
+
 
   /* ============================================================
      FINDERS
   ============================================================ */
-
   async findAll(args: any = {}, includeDeleted = false): Promise<T[]> {
     const model = this.getModel();
     const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
@@ -122,7 +114,6 @@ export abstract class BaseService<T> {
   /* ============================================================
      CREATE / UPDATE
   ============================================================ */
-
   async create(data: any, include?: Record<string, any>): Promise<T> {
     const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
 
@@ -161,7 +152,6 @@ export abstract class BaseService<T> {
   /* ============================================================
      SOFT DELETE / RESTORE / HARD DELETE
   ============================================================ */
-
   async softDelete(id: string): Promise<T> {
     const model = this.getModel();
     const { softDeleteField = 'deleted_at' } = this.getQueryOptions();
@@ -222,7 +212,6 @@ export abstract class BaseService<T> {
   /* ============================================================
      EXTRA
   ============================================================ */
-
   async findAllWithDeleted(args: any = {}): Promise<T[]> {
     return this.getModel().findMany(args);
   }
