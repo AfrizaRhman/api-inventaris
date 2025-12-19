@@ -25,34 +25,25 @@ export class LoansService extends BaseService<any> {
     return {
       softDeleteField: 'deleted_at',
 
-      // ✅ FIELD YANG BENER ADA DI MODEL
       defaultSortField: 'loan_date',
       defaultSortDirection: SortDirection.DESC,
 
-      allowedSortFields: [
-        'loan_date',
-        'name',
-        'email',
-        'phone_number',
-      ],
+      allowedSortFields: ['loan_date', 'name', 'email', 'phone_number'],
+      allowedFilterFields: ['name', 'email', 'phone_number', 'loan_date'],
+      defaultSearchFields: ['name', 'email', 'phone_number'],
 
-      allowedFilterFields: [
-        'name',
-        'email',
-        'phone_number',
-        'loan_date',
-      ],
-
-      defaultSearchFields: [
-        'name',
-        'email',
-        'phone_number',
-      ],
-
+      // 🔥 INCLUDE PALING PENTING (ITEM + GUDANG)
       defaultInclude: {
         loan_details: {
           where: { deleted_at: null },
-          include: { sku: true },
+          include: {
+            sku: {
+              include: {
+                item: true,
+                warehouse: true,
+              },
+            },
+          },
         },
       },
 
@@ -85,10 +76,19 @@ export class LoansService extends BaseService<any> {
             }
           : undefined,
       },
+
+      // 🔥 RESPONSE INCLUDE LENGKAP
       include: {
         loan_details: {
           where: { deleted_at: null },
-          include: { sku: true },
+          include: {
+            sku: {
+              include: {
+                item: true,
+                warehouse: true,
+              },
+            },
+          },
         },
       },
     });
@@ -99,11 +99,18 @@ export class LoansService extends BaseService<any> {
   async findAllLoans(pagination: PaginationDto) {
     return this.findAllPaginated(
       pagination,
-      {}, // additional where
+      {},
       {
         loan_details: {
           where: { deleted_at: null },
-          include: { sku: true },
+          include: {
+            sku: {
+              include: {
+                item: true,
+                warehouse: true,
+              },
+            },
+          },
         },
       },
     );
@@ -115,7 +122,14 @@ export class LoansService extends BaseService<any> {
     const loan = await this.findById(id, {
       loan_details: {
         where: { deleted_at: null },
-        include: { sku: true },
+        include: {
+          sku: {
+            include: {
+              item: true,
+              warehouse: true,
+            },
+          },
+        },
       },
     });
 
