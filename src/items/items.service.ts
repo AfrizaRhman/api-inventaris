@@ -20,6 +20,8 @@ export class ItemsService extends BaseService<any> {
     return this.prismaService.db.item;
   }
 
+  // pppp
+  
   /** QUERY OPTIONS */
   protected getQueryOptions(): QueryBuilderOptions {
     return {
