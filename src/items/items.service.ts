@@ -21,7 +21,7 @@ export class ItemsService extends BaseService<any> {
   }
 
   // pppp
-  
+
   /** QUERY OPTIONS */
   protected getQueryOptions(): QueryBuilderOptions {
     return {
